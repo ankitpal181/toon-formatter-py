@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: toon-formatter
-Version: 1.0.0
+Version: 1.0.1
 Summary: A lightweight library to convert between TOON (Token-Oriented Object Notation) and popular data formats (JSON, YAML, XML, CSV).
 Author-email: Ankit Pal <ankitpal181@gmail.com>
 Project-URL: Homepage, https://github.com/ankitpal181/toon-formatter-py
