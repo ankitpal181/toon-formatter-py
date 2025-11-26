@@ -73,8 +73,10 @@ class ToonConverter:
         """
         return validate_toon_string(toon_string)
 
+from .async_converter import AsyncToonConverter
+
 __all__ = [
-    'ToonConverter',
+    'ToonConverter', 'AsyncToonConverter',
     'json_to_toon', 'toon_to_json',
     'yaml_to_toon', 'toon_to_yaml',
     'xml_to_toon', 'toon_to_xml',

@@ -29,6 +29,28 @@ json_output = ToonConverter.to_json(toon_string)
 print(json_output)
 ```
 
+## ⚡ Async Usage
+
+For non-blocking operations in async applications, use `AsyncToonConverter`:
+
+```python
+import asyncio
+from toon_parse import AsyncToonConverter
+
+async def main():
+    data = {"name": "Alice", "age": 30}
+    
+    # Async conversion
+    toon_string = await AsyncToonConverter.from_json(data)
+    print(toon_string)
+    
+    # Async parsing
+    json_output = await AsyncToonConverter.to_json(toon_string)
+    print(json_output)
+
+asyncio.run(main())
+```
+
 ## 📚 API Reference
 
 The Python API mirrors the JavaScript API with snake_case naming conventions.
@@ -42,6 +64,7 @@ The Python API mirrors the JavaScript API with snake_case naming conventions.
 - `ToonConverter.from_csv(csv_string)`
 - `ToonConverter.to_csv(toon_string)`
 - `ToonConverter.validate(toon_string)`
+- `AsyncToonConverter.*` (same methods as above, but async)
 
 ## 📄 License
 
