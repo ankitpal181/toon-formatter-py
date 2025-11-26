@@ -5,7 +5,7 @@ Summary: A lightweight library to convert between TOON (Token-Oriented Object No
 Author-email: Ankit Pal <ankitpal181@gmail.com>
 Project-URL: Homepage, https://github.com/ankitpal181/toon-formatter-py
 Project-URL: Bug Tracker, https://github.com/ankitpal181/toon-formatter-py/issues
-Project-URL: Funding, https://github.com
+Project-URL: Funding, https://github.com/sponsors/ankitpal181
 Classifier: Programming Language :: Python :: 3
 Classifier: License :: OSI Approved :: MIT License
 Classifier: Operating System :: OS Independent
