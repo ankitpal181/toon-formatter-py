@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "toon-formatter"
+version = "1.0.0"
+description = "A lightweight library to convert between TOON (Token-Oriented Object Notation) and popular data formats (JSON, YAML, XML, CSV)."
+readme = "README.md"
+authors = [
+  { name="Ankit Pal", email="ankitpal181@gmail.com" },
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+requires-python = ">=3.7"
+dependencies = [
+    "PyYAML>=6.0",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/ankitpal181/toon-formatter-py"
+"Bug Tracker" = "https://github.com/ankitpal181/toon-formatter-py/issues"
+"Funding" = "github.com"
