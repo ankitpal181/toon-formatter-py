@@ -7,7 +7,7 @@ A lightweight library to convert between **TOON** (Token-Oriented Object Notatio
 ## 📦 Installation
 
 ```bash
-pip install toon-formatter
+pip install toon-parse
 ```
 
 ## 🚀 Quick Start
