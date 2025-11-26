@@ -13,7 +13,7 @@ pip install toon-parse
 ## 🚀 Quick Start
 
 ```python
-from toon_formatter import ToonConverter
+from toon_parse import ToonConverter
 
 # JSON to TOON
 data = {"name": "Alice", "age": 30, "active": True}

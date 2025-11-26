@@ -5,7 +5,7 @@ import os
 # Add src to path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../src')))
 
-from toon_formatter import (
+from toon_parse import (
     yaml_to_toon, toon_to_yaml,
     xml_to_toon, toon_to_xml,
     csv_to_toon, toon_to_csv

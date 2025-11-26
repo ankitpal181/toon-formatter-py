@@ -5,7 +5,7 @@ import os
 # Add src to path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../src')))
 
-from toon_formatter import ToonConverter, json_to_toon, toon_to_json
+from toon_parse import ToonConverter, json_to_toon, toon_to_json
 
 class TestToonConverter(unittest.TestCase):
     def test_json_to_toon_primitive(self):
