@@ -1,7 +1,7 @@
-from .utils import format_value, parse_value, split_by_delimiter
-import re
+from .utils import format_value, parse_value, split_by_delimiter, extract_json_from_string
+import re, json
 
-def json_to_toon(data, key='', depth=0):
+def json_to_toon_parser(data, key='', depth=0):
     """
     Converts JSON-compatible data to TOON format.
     """
@@ -72,12 +72,12 @@ def json_to_toon(data, key='', depth=0):
             lines.append(f"{next_indent}-") # item marker
             if isinstance(row, dict):
                 for f, child in row.items():
-                    block = json_to_toon(child, f, depth + 2)
+                    block = json_to_toon_parser(child, f, depth + 2)
                     lines.append(block)
             elif isinstance(row, list):
                  # Handle list inside list if needed, though TOON usually expects objects here
                  # We'll just recurse with empty key
-                 block = json_to_toon(row, "", depth + 2)
+                 block = json_to_toon_parser(row, "", depth + 2)
                  lines.append(block)
             else:
                  # Primitive in mixed array?
@@ -94,13 +94,13 @@ def json_to_toon(data, key='', depth=0):
     child_depth = depth + 1 if key else depth
 
     for child_key, child_val in data.items():
-        block = json_to_toon(child_val, child_key, child_depth)
+        block = json_to_toon_parser(child_val, child_key, child_depth)
         lines.append(block)
 
     return "\n".join(lines)
 
 
-def toon_to_json(toon_string):
+def toon_to_json(toon_string, return_json=False):
     """
     Converts TOON string to JSON-compatible data.
     """
@@ -298,4 +298,29 @@ def toon_to_json(toon_string):
                     parent[key] = parse_value(val_str)
             continue
 
-    return root
+    return json.dumps(root) if return_json else root
+
+
+def json_to_toon(data, key='', depth=0):
+    if data is None or not isinstance(data, (dict, list, str)):
+        raise ValueError('Input must be a non-empty string or valid dictionary or list')
+
+    if isinstance(data, str):
+        converted_text = data
+        iteration_count = 0
+        max_iterations = 100
+
+        while iteration_count < max_iterations:
+            json_block = extract_json_from_string(converted_text)
+            if not json_block: break
+
+            try:
+                toon_string = json_to_toon_parser(json.loads(json_block), key, depth)
+                toon_output = toon_string.strip()
+                converted_text = converted_text.replace(json_block, toon_output)
+                iteration_count += 1
+            except:
+                raise Exception('Error while converting JSON to TOON')
+
+        return converted_text
+    else: return json_to_toon_parser(data, key, depth)

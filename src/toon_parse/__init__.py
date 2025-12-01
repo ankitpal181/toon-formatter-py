@@ -18,11 +18,11 @@ class ToonConverter:
         return json_to_toon(json_data)
 
     @staticmethod
-    def to_json(toon_string):
+    def to_json(toon_string, return_json=True):
         """
         Convert TOON to JSON-compatible data.
         """
-        return toon_to_json(toon_string)
+        return toon_to_json(toon_string, return_json)
 
     @staticmethod
     def from_yaml(yaml_string):

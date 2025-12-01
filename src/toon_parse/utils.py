@@ -95,3 +95,136 @@ def format_value(v):
         escaped = v.replace('"', '\\"')
         return f'"{escaped}"'
     return str(v)
+
+def extract_json_from_string(text):
+    """
+    Extracts JSON from mixed text.
+    """
+    if not text or not isinstance(text, str):
+        return None
+    
+    start_index = -1
+    for i, char in enumerate(text):
+        if char == '{' or char == '[':
+            start_index = i
+            break
+            
+    if start_index == -1:
+        return None
+        
+    balance = 0
+    in_quote = False
+    escape = False
+    
+    for i in range(start_index, len(text)):
+        char = text[i]
+        
+        if escape:
+            escape = False
+            continue
+            
+        if char == '\\':
+            escape = True
+            continue
+            
+        if char == '"':
+            in_quote = not in_quote
+            continue
+            
+        if not in_quote:
+            if char == '{' or char == '[':
+                balance += 1
+            elif char == '}' or char == ']':
+                balance -= 1
+            
+            if balance == 0:
+                candidate = text[start_index:i+1]
+                try:
+                    import json
+                    json.loads(candidate)
+                    return candidate
+                except json.JSONDecodeError:
+                    pass
+                    
+    return None
+
+def extract_xml_from_string(text):
+    """
+    Extracts XML from mixed text.
+    """
+    if not text or not isinstance(text, str):
+        return None
+        
+    # Find first start tag
+    start_tag_regex = re.compile(r'<([a-zA-Z0-9_:-]+)(?:\s[^>]*)?>')
+    match = start_tag_regex.search(text)
+    
+    if not match:
+        return None
+        
+    start_index = match.start()
+    root_tag_name = match.group(1)
+    full_match = match.group(0)
+    
+    if full_match.endswith('/>'):
+        return full_match
+        
+    balance = 0
+    tag_regex = re.compile(r'<\/?([a-zA-Z0-9_:-]+)(?:\s[^>]*)?\/?>')
+    
+    # We need to iterate through matches starting from start_index
+    for match_tag in tag_regex.finditer(text, start_index):
+        full_tag = match_tag.group(0)
+        tag_name = match_tag.group(1)
+        
+        if tag_name != root_tag_name:
+            continue
+            
+        if full_tag.startswith('</'):
+            balance -= 1
+        elif not full_tag.endswith('/>'):
+            balance += 1
+            
+        if balance == 0:
+            return text[start_index:match_tag.end()]
+            
+    return None
+
+def extract_csv_from_string(text):
+    """
+    Extracts CSV from mixed text.
+    """
+    if not text or not isinstance(text, str):
+        return None
+        
+    lines = text.split('\n')
+    start_line_index = -1
+    
+    for i, line in enumerate(lines):
+        comma_count = line.count(',')
+        if comma_count > 0:
+            start_line_index = i
+            break
+            
+    if start_line_index == -1:
+        return None
+        
+    result_lines = []
+    
+    for i in range(start_line_index, len(lines)):
+        line = lines[i]
+        if not line.strip():
+            continue
+            
+        comma_count = line.count(',')
+        if comma_count == 0:
+            break
+        result_lines.append(line)
+        
+    result = "\n".join(result_lines).strip()
+    
+    # Avoid matching TOON arrays (e.g. users[2]{id,name}:)
+    if re.match(r'^\s*(\w+)?\[\d+\]', result):
+        return None
+        
+    return result

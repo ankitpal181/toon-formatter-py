@@ -19,12 +19,12 @@ class AsyncToonConverter:
         return await loop.run_in_executor(None, json_to_toon, json_data)
 
     @staticmethod
-    async def to_json(toon_string):
+    async def to_json(toon_string, return_json=True):
         """
         Convert TOON to JSON-compatible data (Async).
         """
         loop = asyncio.get_running_loop()
-        return await loop.run_in_executor(None, toon_to_json, toon_string)
+        return await loop.run_in_executor(None, toon_to_json, toon_string, return_json)
 
     @staticmethod
     async def from_yaml(yaml_string):
