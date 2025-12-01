@@ -1,6 +1,6 @@
 import xml.etree.ElementTree as ET
 from .json_converter import json_to_toon, toon_to_json
-from .utils import encode_xml_reserved_chars
+from .utils import encode_xml_reserved_chars, extract_xml_from_string
 
 def xml_to_json_object(element):
     """
@@ -197,25 +197,37 @@ def xml_to_toon(xml_string):
     if not xml_string or not isinstance(xml_string, str):
         raise ValueError("Input must be a non-empty string")
     
-    try:
-        # Encode reserved chars
-        encoded_xml = encode_xml_reserved_chars(xml_string)
-        # Parse XML
-        # We wrap in a fake root if multiple roots? No, XML has one root.
-        root = ET.fromstring(encoded_xml)
-        
-        # Convert to JSON object
-        # ElementTree root is the root element.
-        # JS `xmlToJsonObject` takes the document.
-        # If we pass root, we get the content of root.
-        # We need to wrap it in the root tag name.
-        
-        json_content = xml_to_json_object(root)
-        data = {root.tag: json_content}
-        
-        return json_to_toon(data)
-    except ET.ParseError as e:
-        raise ValueError(f"Invalid XML: {e}")
+    converted_text = xml_string
+    iteration_count = 0
+    max_iterations = 100
+
+    while iteration_count < max_iterations:
+        xml_block = extract_xml_from_string(converted_text)
+        if not xml_block: break
+
+        try:
+            # Encode reserved chars
+            encoded_xml = encode_xml_reserved_chars(xml_block)
+            # Parse XML
+            # We wrap in a fake root if multiple roots? No, XML has one root.
+            root = ET.fromstring(encoded_xml)
+            
+            # Convert to JSON object
+            # ElementTree root is the root element.
+            # JS `xmlToJsonObject` takes the document.
+            # If we pass root, we get the content of root.
+            # We need to wrap it in the root tag name.
+            
+            json_content = xml_to_json_object(root)
+            data = {root.tag: json_content}
+            toon_string = json_to_toon(data)
+            toon_output = toon_string.strip()
+            converted_text = converted_text.replace(xml_block, toon_output)
+            iteration_count += 1
+        except:
+            raise Exception('Error while converting XML to TOON')
+
+    return converted_text
 
 def toon_to_xml(toon_string):
     """

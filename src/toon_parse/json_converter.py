@@ -1,4 +1,5 @@
 from .utils import format_value, parse_value, split_by_delimiter, extract_json_from_string
+from .validator import validate_toon_string
 import re, json
 
 def json_to_toon_parser(data, key='', depth=0):
@@ -104,6 +105,12 @@ def toon_to_json(toon_string, return_json=False):
     """
     Converts TOON string to JSON-compatible data.
     """
+    # Validate TOON string before conversion
+    validation_status = validate_toon_string(toon_string)
+
+    if not validation_status.is_valid:
+        raise ValueError(f'Invalid TOON: {validation_status.error}')
+
     lines = toon_string.split('\n')
     root = {}
     stack = []

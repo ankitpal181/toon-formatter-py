@@ -3,7 +3,10 @@ from .yaml_converter import yaml_to_toon, toon_to_yaml
 from .xml_converter import xml_to_toon, toon_to_xml
 from .csv_converter import csv_to_toon, toon_to_csv
 from .validator import validate_toon_string
-from .utils import encode_xml_reserved_chars, split_by_delimiter, parse_value, format_value
+from .utils import (
+    encode_xml_reserved_chars, split_by_delimiter, parse_value, format_value,
+    extract_json_from_string, extract_xml_from_string, extract_csv_from_string
+)
 
 class ToonConverter:
     """
@@ -82,5 +85,6 @@ __all__ = [
     'xml_to_toon', 'toon_to_xml',
     'csv_to_toon', 'toon_to_csv',
     'validate_toon_string',
-    'encode_xml_reserved_chars', 'split_by_delimiter', 'parse_value', 'format_value'
+    'encode_xml_reserved_chars', 'split_by_delimiter', 'parse_value', 'format_value',
+    'extract_json_from_string', 'extract_xml_from_string', 'extract_csv_from_string'
 ]
