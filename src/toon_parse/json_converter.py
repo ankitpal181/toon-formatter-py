@@ -108,8 +108,8 @@ def toon_to_json(toon_string, return_json=False):
     # Validate TOON string before conversion
     validation_status = validate_toon_string(toon_string)
 
-    if not validation_status.is_valid:
-        raise ValueError(f'Invalid TOON: {validation_status.error}')
+    if not validation_status['is_valid']:
+        raise ValueError(f'Invalid TOON: {validation_status["error"]}')
 
     lines = toon_string.split('\n')
     root = {}
@@ -308,19 +308,20 @@ def toon_to_json(toon_string, return_json=False):
     return json.dumps(root) if return_json else root
 
 
-def json_to_toon(data, key='', depth=0):
-    if data is None or not isinstance(data, (dict, list, str)):
-        raise ValueError('Input must be a non-empty string or valid dictionary or list')
 
+def json_to_toon(data, key='', depth=0):
+    # Handle string input (JSON text or mixed text)
     if isinstance(data, str):
         converted_text = data
         iteration_count = 0
         max_iterations = 100
+        found_any_json = False
 
         while iteration_count < max_iterations:
             json_block = extract_json_from_string(converted_text)
             if not json_block: break
-
+            
+            found_any_json = True
             try:
                 toon_string = json_to_toon_parser(json.loads(json_block), key, depth)
                 toon_output = toon_string.strip()
@@ -329,5 +330,12 @@ def json_to_toon(data, key='', depth=0):
             except:
                 raise Exception('Error while converting JSON to TOON')
 
+        # If no JSON was found, treat the string as a primitive value
+        if not found_any_json:
+            return json_to_toon_parser(data, key, depth)
+            
         return converted_text
-    else: return json_to_toon_parser(data, key, depth)
+    else:
+        # Handle dict, list, or primitives
+        return json_to_toon_parser(data, key, depth)
+

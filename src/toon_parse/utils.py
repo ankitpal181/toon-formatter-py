@@ -139,6 +139,22 @@ def extract_json_from_string(text):
             
             if balance == 0:
                 candidate = text[start_index:i+1]
+                
+                # Avoid matching TOON arrays (e.g. [3]: 1, 2, 3)
+                if re.match(r'^\s*\[\d+\]', candidate):
+                    # Continue searching for next JSON block
+                    start_index = -1
+                    for j in range(i+1, len(text)):
+                        if text[j] == '{' or text[j] == '[':
+                            start_index = j
+                            break
+                    if start_index == -1:
+                        return None
+                    balance = 0
+                    in_quote = False
+                    escape = False
+                    continue
+                
                 try:
                     import json
                     json.loads(candidate)
@@ -155,8 +171,8 @@ def extract_xml_from_string(text):
     if not text or not isinstance(text, str):
         return None
         
-    # Find first start tag
-    start_tag_regex = re.compile(r'<([a-zA-Z0-9_:-]+)(?:\s[^>]*)?>')
+    # Find first start tag (including self-closing)
+    start_tag_regex = re.compile(r'<([a-zA-Z0-9_:-]+)(?:\s[^>]*)?\/?>')
     match = start_tag_regex.search(text)
     
     if not match:
