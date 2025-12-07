@@ -30,7 +30,7 @@ class TestAsyncToonConverter(unittest.TestCase):
         toon = 'name: "Alice"\nage: 30'
         
         async def run():
-            return await AsyncToonConverter.to_json(toon)
+            return await AsyncToonConverter.to_json(toon, return_json=False)
             
         json_data = self.loop.run_until_complete(run())
         self.assertEqual(json_data, {"name": "Alice", "age": 30})

@@ -1,4 +1,5 @@
 import re
+import inspect
 
 def encode_xml_reserved_chars(raw_xml_string):
     """
@@ -244,3 +245,120 @@ def extract_csv_from_string(text):
         return None
         
     return result
+
+def get_function_signature_bindings(function, *args, **kwargs):
+    try:
+        sig = inspect.signature(function)
+        bound = sig.bind(*args, **kwargs)
+        bound.apply_defaults()
+        return (bound.arguments, sig.parameters,)
+    except TypeError:
+        return (None, None)
+
+def _populate_converter_arguments(function, *args, **kwargs):
+    arguments, parameters = get_function_signature_bindings(function, *args, **kwargs)
+    param_names = list(parameters.keys())
+    
+    if arguments is None or len(param_names) < 2:
+        # Original function will throw necessary errors
+        raise TypeError("Invalid function signature")
+    
+    self = arguments.get('self')
+    data_param_name = param_names[1]
+    data = arguments.get(data_param_name)
+    conversion_mode = arguments.get("conversion_mode")
+    return_json = arguments.get("return_json")
+    keyword_args = {
+        k: v for k, v in arguments.items() 
+        if k not in ('self', data_param_name)
+    }
+    
+    return (self, data, conversion_mode, return_json, keyword_args)
+
+def encryption_modulator(convertor_function):
+    def encryption_wrapper(*args, **kwargs):
+        first_arg = args[0] if args else None
+        
+        if hasattr(first_arg, 'encryptor'):
+            # Instance Mode
+            try:
+                self, data, conversion_mode, return_json, keyword_args = _populate_converter_arguments(
+                    convertor_function, *args, **kwargs
+                )
+                
+                if self.encryptor and conversion_mode != "no_encryption":
+                    if conversion_mode == "middleware":
+                        decrypted_data = self.encryptor.decrypt(data)
+                        plain_converted_data = convertor_function(self, decrypted_data, **keyword_args)
+                        converted_data = self.encryptor.encrypt(plain_converted_data)
+                    elif conversion_mode == "ingestion":
+                        decrypted_data = self.encryptor.decrypt(data)
+                        converted_data = convertor_function(self, decrypted_data, **keyword_args)
+                    elif conversion_mode == "export":
+                        plain_converted_data = convertor_function(*args, **kwargs)
+                        converted_data = self.encryptor.encrypt(plain_converted_data)
+                    else:
+                        converted_data = convertor_function(*args, **kwargs)
+                else:
+                    converted_data = convertor_function(*args, **kwargs)
+
+                return converted_data
+            except TypeError as te:
+                if str(te) == "Invalid function signature":
+                    return convertor_function(*args, **kwargs)
+                raise te
+            except Exception as ex:
+                if conversion_mode in ("middleware", "export") and return_json is False:
+                    raise ValueError(
+                        "return_json must be True for middleware and export conversion modes"
+                    )
+                raise ex
+        else:
+            # Static Mode
+            return convertor_function(None, *args, **kwargs)
+
+    return encryption_wrapper
+
+def async_encryption_modulator(convertor_function):
+    async def encryption_wrapper(*args, **kwargs):
+        first_arg = args[0] if args else None
+        
+        if hasattr(first_arg, 'encryptor'):
+            # Instance Mode
+            try:
+                self, data, conversion_mode, return_json, keyword_args = _populate_converter_arguments(
+                    convertor_function, *args, **kwargs
+                )
+
+                if self.encryptor and conversion_mode != "no_encryption":
+                    if conversion_mode == "middleware":
+                        decrypted_data = self.encryptor.decrypt(data)
+                        plain_converted_data = await convertor_function(self, decrypted_data, **keyword_args)
+                        converted_data = self.encryptor.encrypt(plain_converted_data)
+                    elif conversion_mode == "ingestion":
+                        decrypted_data = self.encryptor.decrypt(data)
+                        converted_data = await convertor_function(self, decrypted_data, **keyword_args)
+                    elif conversion_mode == "export":
+                        plain_converted_data = await convertor_function(*args, **kwargs)
+                        converted_data = self.encryptor.encrypt(plain_converted_data)
+                    else:
+                        converted_data = await convertor_function(*args, **kwargs)
+                else:
+                    converted_data = await convertor_function(*args, **kwargs)
+
+                return converted_data
+            except TypeError as te:
+                if str(te) == "Invalid function signature":
+                    return await convertor_function(*args, **kwargs)
+                raise te
+            except Exception as ex:
+                if conversion_mode in ("middleware", "export") and return_json is False:
+                    raise ValueError(
+                        "return_json must be True for middleware and export conversion modes"
+                    )
+                raise ex
+        else:
+            # Static Mode
+            return await convertor_function(None, *args, **kwargs)
+
+    return encryption_wrapper

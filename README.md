@@ -32,9 +32,9 @@ print(json_output)
 # Output: {'name': 'Alice', 'age': 30, 'active': True}
 ```
 
-### Mixed Text Support (New!)
+### Mixed Text Support
 
-The library can now automatically extract and convert JSON, XML, and CSV data embedded within normal text. This is perfect for processing LLM outputs.
+The library can automatically extract and convert JSON, XML, and CSV data embedded within normal text. This is perfect for processing LLM outputs.
 
 ```python
 from toon_parse import ToonConverter
@@ -62,27 +62,87 @@ print(result)
 # Please verify this information.
 ```
 
+### 🔐 Secure Conversion Middleware (New!)
+
+The `ToonConverter` can act as a **secure middleware** for processing encrypted data streams (e.g., from microservices). It handles the full **Decrypt -> Convert -> Encrypt** pipeline internally.
+
+#### Supported Algorithms
+- **Fernet**: High security (AES-128). Requires `cryptography`.
+- **XOR**: Lightweight obfuscation.
+- **Base64**: Encoding only.
+
+#### Conversion Modes
+1.  **`"middleware"`**: Encrypted Input → Encrypted Output (Decrypt → Convert → Re-encrypt)
+2.  **`"ingestion"`**: Encrypted Input → Plain Output (Decrypt → Convert)
+3.  **`"export"`**: Plain Input → Encrypted Output (Convert → Encrypt)
+4.  **`"no_encryption"`**: Standard conversion (default)
+
+#### Example Workflow
+
+```python
+from toon_parse import ToonConverter, Encryptor
+from cryptography.fernet import Fernet
+
+# Setup
+key = Fernet.generate_key()
+enc = Encryptor(key=key, algorithm='fernet')
+converter = ToonConverter(encryptor=enc)
+
+# --- Mode 1: Middleware (Encrypted -> Encrypted) ---
+raw_data = '{"user": "Alice", "role": "admin"}'
+encrypted_input = enc.encrypt(raw_data)  # Simulate upstream encrypted data
+
+# Converter decrypts, converts to TOON, and re-encrypts
+encrypted_toon = converter.from_json(
+    encrypted_input, 
+    conversion_mode="middleware"
+)
+print(f"Secure Result: {encrypted_toon}")
+
+# --- Mode 2: Ingestion (Encrypted -> Plain) ---
+plain_toon = converter.from_json(
+    encrypted_input,
+    conversion_mode="ingestion"
+)
+print(f"Decrypted TOON: {plain_toon}")
+
+# --- Mode 3: Export (Plain -> Encrypted) ---
+my_data = {"status": "ok"}
+secure_packet = converter.from_json(
+    my_data,
+    conversion_mode="export"
+)
+print(f"Encrypted Output: {secure_packet}")
+```
+
 ## ⚡ Async Usage
 
-For non-blocking operations in async applications (e.g., FastAPI, AIOHTTP), use `AsyncToonConverter`.
+For non-blocking operations in async applications (e.g., FastAPI), use `AsyncToonConverter`.
 
 ```python
 import asyncio
-from toon_parse import AsyncToonConverter
+from toon_parse import AsyncToonConverter, Encryptor
 
 async def main():
-    # Mixed text input
+    # 1. Standard Async Usage
+    converter = AsyncToonConverter()
     text = 'Data: <user><name>Alice</name></user>'
+    toon = await converter.from_xml(text)
+    print(toon)
+
+    # 2. Async with Secure Middleware
+    enc = Encryptor(algorithm='base64')
+    secure_converter = AsyncToonConverter(encryptor=enc)
     
-    # Async conversion (XML -> TOON)
-    toon_string = await AsyncToonConverter.from_xml(text)
-    print(toon_string)
-    # Output: Data: user:\n  name: "Alice"
+    # Decrypt -> Convert -> Encrypt (Middleware Mode)
+    encrypted_msg = "eyJrZXkiOiAidmFsIn0=" # Base64 for {"key": "val"}
     
-    # Async parsing (TOON -> JSON String)
-    # Set return_json=False to get a JSON dict instead of a string
-    json_dict = await AsyncToonConverter.to_json(toon_string, return_json=False)
-    print(json_dict)
+    # Use conversion_mode to specify pipeline behavior
+    result = await secure_converter.from_json(
+        encrypted_msg, 
+        conversion_mode="middleware"
+    )
+    print(result)
 
 asyncio.run(main())
 ```
@@ -95,39 +155,91 @@ asyncio.run(main())
 | **Pure String Input** | ✅ | ✅ | ✅ | ✅ | ✅ |
 | **Mixed Text Support** | ✅ | ✅ | ✅ | ❌ | ❌ |
 | **Async Support** | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Encryption Support** | ✅ | ✅ | ✅ | ✅ | ✅ |
 
-- **Mixed Text**: Supported for JSON, XML, and CSV. The converter will find *all* occurrences of the data format in the text and convert them to TOON, leaving surrounding text intact.
-- **YAML & TOON**: Input must be a valid, complete string. Mixed text is not supported for these formats.
+- **Mixed Text**: Finds occurrences of data formats in text (JSON, XML, CSV) and converts them in-place.
+- **Encryption**: Supports Fernet, XOR, and Base64 middleware conversions.
+
+## ⚙️ Static vs Instance Usage
+
+### Conversion Methods (`from_json`, `to_json`, etc.)
+
+All conversion methods support **both static and instance** calling patterns:
+
+```python
+from toon_parse import ToonConverter
+
+# ✅ Static Usage (No Encryption)
+toon = ToonConverter.from_json({"key": "value"})
+
+# ✅ Instance Usage (Encryption Supported)
+converter = ToonConverter(encryptor=enc)
+toon = converter.from_json({"key": "value"}, conversion_mode="export")
+```
+
+**Important**: 
+- **Static calls** (`ToonConverter.from_json(...)`) work but **cannot use encryption features**.
+- **Instance calls** are required to use `conversion_mode` and encryption middleware.
+
+The same applies to async methods.
+
+### Validate Method
+
+The `validate()` method is **strictly static** and does **not** support encryption:
+
+```python
+# ✅ Correct Usage
+result = ToonConverter.validate('key: "value"')
+
+# ❌ Will NOT work with encryption
+converter = ToonConverter(encryptor=enc)
+result = converter.validate(encrypted_data)  # No decryption happens!
+```
+
+**Why?** Validation returns a dictionary (not a string), which cannot be encrypted. If you need to validate encrypted data, decrypt it first manually:
+
+```python
+decrypted = enc.decrypt(encrypted_toon)
+result = ToonConverter.validate(decrypted)
+```
+
+The same applies to `AsyncToonConverter.validate()`.
 
 ## 🛠 API Reference
 
 ### Core Converters
 
 #### `ToonConverter` (Synchronous)
-- `from_json(data)`: Converts dict, list, JSON string, or mixed text to TOON.
-- `to_json(toon_string, return_json=False)`: Converts TOON to Python dict/list. Set `return_json=True`(default) to get a JSON string.
-- `from_xml(xml_string)`: Converts XML string or mixed text to TOON.
-- `from_csv(csv_string)`: Converts CSV string or mixed text to TOON.
-- `from_yaml(yaml_string)`: Converts YAML string to TOON (no mixed text).
-- `to_xml(toon_string)`: Converts TOON to XML.
-- `to_csv(toon_string)`: Converts TOON to CSV.
-- `to_yaml(toon_string)`: Converts TOON to YAML.
-- `validate(toon_string)`: Validates TOON syntax. Returns `{'is_valid': bool, 'error': str}`.
+**Constructor**: `ToonConverter(encryptor: Encryptor = None)`
+
+All conversion methods accept an optional `conversion_mode` argument:
+- `conversion_mode`: `"no_encryption"` (default), `"middleware"`, `"ingestion"`, `"export"`.
+
+- `from_json(data, conversion_mode=...)`: Converts dict/list/string to TOON.
+- `to_json(toon_string, return_json=True, conversion_mode=...)`: Converts TOON to Python/JSON.
+- `from_xml`, `from_csv`, `from_yaml`, `to_xml`, `to_csv`, `to_yaml`: Equivalent methods.
+- `validate(toon_string)`: **Static Method Only**. Validates TOON syntax. Does not support encryption.
 
 #### `AsyncToonConverter` (Asynchronous)
-- Mirrors all methods of `ToonConverter` but as `async` functions.
-- Example: `await AsyncToonConverter.from_json(data)`
+**Constructor**: `AsyncToonConverter(encryptor: Encryptor = None)`
+
+- Mirrors all `ToonConverter` methods as `async` functions (e.g., `await conv.from_json(...)`).
+- Supports the same `conversion_mode` parameters for encryption pipelines.
+- `validate(toon_string)`: **Static Method Only**. Async validation. No encryption support.
+
+### Encryption
+
+#### `Encryptor`
+**Constructor**: `Encryptor(key=None, algorithm='fernet')`
+- `algorithm`: `'fernet'` (default), `'xor'`, `'base64'`.
+- `key`: Required for Fernet/XOR.
+- `encrypt(data)`, `decrypt(data)`: Helper methods.
 
 ### Utility Functions
 
-You can also import extraction functions directly if you need to extract data without converting it.
-
 ```python
 from toon_parse import extract_json_from_string, extract_xml_from_string, extract_csv_from_string
-
-text = "Some text {"key": "val"} more text"
-json_str = extract_json_from_string(text)
-# Returns: '{"key": "val"}'
+# Direct access to extraction logic without conversion
 ```
 
 ## 📄 License
