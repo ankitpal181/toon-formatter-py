@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "toon-parse"
-version = "2.0.0"
+version = "2.0.1"
 description = "A lightweight library to convert between TOON (Token-Oriented Object Notation) and popular data formats (JSON, YAML, XML, CSV)."
 readme = "README.md"
 authors = [
@@ -22,6 +22,9 @@ dependencies = [
 ]
 
 [project.urls]
-"Homepage" = "https://github.com/ankitpal181/toon-formatter-py"
+"Documentation" = "https://toonformatter.net/docs.html?package=toon-parse"
+"Download" = "https://pypi.org/project/toon-parse/#files"
+"Source" = "https://github.com/ankitpal181/toon-formatter-py"
 "Bug Tracker" = "https://github.com/ankitpal181/toon-formatter-py/issues"
 "Funding" = "https://github.com/sponsors/ankitpal181"
+"POC Tool" = "https://toonformatter.net/"

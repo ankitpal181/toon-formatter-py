@@ -4,6 +4,11 @@ A lightweight library to convert between **TOON** (Token-Oriented Object Notatio
 
 **Reduce your LLM token costs by up to 40%** using the TOON format!
 
+- **Documentation**: https://toonformatter.net/docs.html?package=toon-parse
+- **Source Code**: https://github.com/ankitpal181/toon-formatter-py
+- **Bug Reports**: https://github.com/ankitpal181/toon-formatter-py/issues
+- **POC Tool**: https://toonformatter.net/
+
 ## 📦 Installation
 
 ```bash
