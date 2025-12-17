@@ -1,6 +1,7 @@
+import json
 import xml.etree.ElementTree as ET
-from .json_converter import json_to_toon, toon_to_json
-from .utils import encode_xml_reserved_chars, extract_xml_from_string
+from ..utils import encode_xml_reserved_chars, extract_xml_from_string
+
 
 def xml_to_json_object(element):
     """
@@ -86,9 +87,9 @@ def build_tag(key, value):
     else:
         return f"<{key} />"
 
-def xml_to_toon(xml_string):
+def xml_to_json(xml_string):
     """
-    Converts XML to TOON format.
+    Converts XML to JSON format.
     """
     if not xml_string or not isinstance(xml_string, str):
         raise ValueError("Input must be a non-empty string")
@@ -111,31 +112,47 @@ def xml_to_toon(xml_string):
             # Convert to JSON object
             json_content = xml_to_json_object(root)
             data = {root.tag: json_content}
-            toon_string = json_to_toon(data)
-            toon_output = toon_string.strip()
-            converted_text = converted_text.replace(xml_block, toon_output)
+            json_string = json.dumps(data)
+            json_output = json_string.strip()
+            converted_text = converted_text.replace(xml_block, json_output)
             iteration_count += 1
         except:
-            raise Exception('Error while converting XML to TOON')
+            raise Exception('Error while converting XML to JSON')
 
     return converted_text
 
-def toon_to_xml(toon_string):
+def json_to_xml(data):
     """
-    Converts TOON to XML format.
+    Converts JSON to XML format.
     """
-    if not toon_string or not isinstance(toon_string, str):
-        raise ValueError("Input must be a non-empty string")
+    if not data: raise ValueError("Input must be a non-empty")
     
-    data = toon_to_json(toon_string)
-    
-    # Convert to XML string
-    # data is expected to be { "root": { ... } }
-    # We use build_tag for the top level keys
-    
-    xml_str = ""
-    if isinstance(data, dict):
-        for k, v in data.items():
-            xml_str += build_tag(k, v)
-    
-    return xml_str
+    # Handle non-string input
+    if not isinstance(data, str):
+        xml_string = ""
+        if isinstance(data, dict):
+            for k, v in data.items():
+                xml_string += build_tag(k, v)
+        return xml_string
+
+    converted_text = data
+    iteration_count = 0
+    max_iterations = 100
+
+    while iteration_count < max_iterations:
+        json_block = extract_json_from_string(converted_text)
+        if not json_block: break
+        
+        try:
+            xml_string = ""
+            json_data = json.loads(json_block)
+            if isinstance(json_data, dict):
+                for k, v in json_data.items():
+                    xml_string += build_tag(k, v)
+            xml_output = xml_string.strip()
+            converted_text = converted_text.replace(json_block, xml_output)
+            iteration_count += 1
+        except:
+            raise Exception('Error while converting JSON to XML')
+        
+    return converted_text

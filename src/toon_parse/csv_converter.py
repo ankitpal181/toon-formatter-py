@@ -24,13 +24,6 @@ def csv_to_toon(csv_string):
             data = list(reader)
             
             # Convert values to numbers/booleans/nulls if possible?
-            # JS Papaparse has dynamicTyping: true usually?
-            # The JS code uses `csvToToon` which likely uses `papaparse` with dynamic typing?
-            # Let's check JS code if I can.
-            # But for now, I'll stick to strings as csv module produces strings.
-            # If I want to match TOON philosophy, I should probably try to infer types.
-            # Let's add simple inference.
-            
             parsed_data = []
             for row in data:
                 new_row = {}
