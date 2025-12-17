@@ -1,5 +1,5 @@
 import csv, json, io
-from ..utils import extract_csv_from_string, extract_json_from_string
+from ..utils import extract_csv_from_string, extract_json_from_string, flatten_json, unflatten_object
 
 
 def csv_to_json(csv_string):
@@ -28,7 +28,7 @@ def csv_to_json(csv_string):
                 new_row = {}
                 for k, v in row.items():
                     new_row[k] = _infer_type(v)
-                parsed_data.append(new_row)
+                parsed_data.append(unflatten_object(new_row))
 
             json_string = json.dumps(parsed_data)
             json_output = json_string.strip()
@@ -78,9 +78,12 @@ def json_to_csv(data):
                 "JSON data must be an array of objects to convert to CSV"
             )
 
+            # Flatten the JSON data
+            flat_json_data = flatten_json(json_data)
+
             # Collect all keys
             keys = set()
-            for item in json_data:
+            for item in flat_json_data:
                 if isinstance(item, dict):
                     keys.update(item.keys())
             
@@ -90,7 +93,7 @@ def json_to_csv(data):
             writer = csv.DictWriter(output, fieldnames=fieldnames)
             
             writer.writeheader()
-            for row in json_data:
+            for row in flat_json_data:
                 if isinstance(row, dict):
                     writer.writerow(row)
 

@@ -1,6 +1,6 @@
 import json
 import xml.etree.ElementTree as ET
-from ..utils import encode_xml_reserved_chars, extract_xml_from_string
+from ..utils import encode_xml_reserved_chars, extract_xml_from_string, build_tag
 
 
 def xml_to_json_object(element):
@@ -52,40 +52,6 @@ def xml_to_json_object(element):
         return {}
 
     return obj
-
-def build_tag(key, value):
-    if isinstance(value, dict):
-        # We need to process children to separate attributes from content
-        # But we can't easily separate them if we just recurse.
-        # We should peek inside `value` for `@attributes`.
-        attrs = ""
-        content = ""
-        
-        # Process @attributes first
-        if "@attributes" in value:
-            attr_data = value["@attributes"]
-            for k, v in attr_data.items():
-                attrs += f' {k}="{v}"'
-        
-        # Process other keys
-        for k, v in value.items():
-            if k == "@attributes": continue
-            if k == "#text":
-                content += str(v)
-            else:
-                # Recurse
-                if isinstance(v, list):
-                    for item in v:
-                        content += build_tag(k, item)
-                else:
-                    content += build_tag(k, v)
-        
-        return f"<{key}{attrs}>{content}</{key}>"
-    
-    elif value is not None:
-        return f"<{key}>{value}</{key}>"
-    else:
-        return f"<{key} />"
 
 def xml_to_json(xml_string):
     """

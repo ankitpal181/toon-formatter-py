@@ -1,7 +1,7 @@
-import csv
-import io
+import csv, io
 from .json_converter import json_to_toon, toon_to_json
-from .utils import extract_csv_from_string
+from .utils import extract_csv_from_string, flatten_json, unflatten_object
+
 
 def csv_to_toon(csv_string):
     """
@@ -29,7 +29,7 @@ def csv_to_toon(csv_string):
                 new_row = {}
                 for k, v in row.items():
                     new_row[k] = _infer_type(v)
-                parsed_data.append(new_row)
+                parsed_data.append(unflatten_object(new_row))
 
             toon_string = json_to_toon(parsed_data)
             toon_output = toon_string.strip()
@@ -70,9 +70,12 @@ def toon_to_csv(toon_string):
     if not data:
         return ""
     
+    # Flatten the JSON data
+    flat_json_data = flatten_json(data)
+    
     # Collect all keys
     keys = set()
-    for item in data:
+    for item in flat_json_data:
         if isinstance(item, dict):
             keys.update(item.keys())
     
@@ -82,7 +85,7 @@ def toon_to_csv(toon_string):
     writer = csv.DictWriter(output, fieldnames=fieldnames)
     
     writer.writeheader()
-    for row in data:
+    for row in flat_json_data:
         if isinstance(row, dict):
             writer.writerow(row)
             

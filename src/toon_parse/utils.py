@@ -11,6 +11,21 @@ def encode_xml_reserved_chars(raw_xml_string):
     # Replace & with &amp; but not if it's already an entity
     return re.sub(r'&(?!#|\w+;)', '&amp;', raw_xml_string)
 
+def sanitize_tag_name(name):
+    """
+    Sanitizes a string for use as an XML tag name.
+    """
+    if not isinstance(name, str) or not name:
+        return '_'
+        
+    # If name starts with non-letter/underscore (e.g. digit), prepend underscore
+    if re.match(r'^[^a-zA-Z_]', name):
+        name = '_' + name
+        
+    # Replace invalid chars with underscore
+    # JS: return name.replace(/[^a-zA-Z0-9_.]/g, '_');
+    return re.sub(r'[^a-zA-Z0-9_.]', '_', name)
+
 def split_by_delimiter(text, delimiter):
     """
     Splits a string by delimiter while respecting quoted strings.
@@ -107,6 +122,13 @@ def extract_json_from_string(text):
     start_index = -1
     for i, char in enumerate(text):
         if char == '{' or char == '[':
+            # Ignore if preceded by non-whitespace (e.g. key[2]), unless it's a closing bracket/brace or XML tag end
+            # JS: if (i > 0 && /\S/.test(text[i - 1]) && !/[\}\]>]/.test(text[i - 1]))
+            if i > 0:
+                prev_char = text[i-1]
+                if not prev_char.isspace() and prev_char not in ('}', ']', '>'):
+                    continue
+            
             start_index = i
             break
             
@@ -217,11 +239,55 @@ def extract_csv_from_string(text):
     lines = text.split('\n')
     start_line_index = -1
     
-    for i, line in enumerate(lines):
+    start_line_index = -1
+    
+    def is_json_like(line):
+        trimmed = line.strip()
+        # "key": value
+        if re.search(r'^"[^"]+"\s*:', trimmed): return True
+        # { or [ start
+        if re.search(r'^[\{\[]', trimmed): return True
+        # } or ] end (with optional comma)
+        if re.search(r'^[\}\]],?$', trimmed): return True
+        return False
+        
+    def is_yaml_like(line):
+        trimmed = line.strip()
+        # - value
+        if trimmed.startswith('- '): return True
+        # Key: Value (heuristic) - avoid CSV-like
+        if re.search(r'^[^",]+:\s', trimmed): return True
+        return False
+        
+    def is_xml_like(line):
+        trimmed = line.strip()
+        return trimmed.startswith('<') and '>' in trimmed
+
+    def is_toon_structure(line):
+        trimmed = line.strip()
+        # [N]... or key[N]... ending with :
+        return re.search(r'^.*?\[\d+\].*:\s*$', trimmed)
+
+    # First pass: find start
+    i = 0
+    while i < len(lines):
+        line = lines[i]
+        
+        # Check TOON header
+        if is_toon_structure(line):
+            count_match = re.search(r'\[(\d+)\]', line)
+            count = int(count_match.group(1)) if count_match else 0
+            i += count + 1 # Skip header + content? 
+            # In JS: i += count. Loop increments i.
+            # So here: i += count is safe if we continue immediately.
+            continue
+            
         comma_count = line.count(',')
         if comma_count > 0:
-            start_line_index = i
-            break
+            if not (is_json_like(line) or is_yaml_like(line) or is_xml_like(line)):
+                start_line_index = i
+                break
+        i += 1
             
     if start_line_index == -1:
         return None
@@ -236,6 +302,11 @@ def extract_csv_from_string(text):
         comma_count = line.count(',')
         if comma_count == 0:
             break
+            
+        # JS Stop condition
+        if is_json_like(line) or is_yaml_like(line) or is_xml_like(line):
+            break
+            
         result_lines.append(line)
         
     result = "\n".join(result_lines).strip()
@@ -243,6 +314,100 @@ def extract_csv_from_string(text):
     # Avoid matching TOON arrays (e.g. users[2]{id,name}:)
     if re.match(r'^\s*(\w+)?\[\d+\]', result):
         return None
+        
+    # Improved check from JS: 
+    # Check for JSON-like start/end
+    trimmed_res = result.strip()
+    # JS: /^[\{\[]/.test(trimmed)
+    if trimmed_res.startswith('{') or trimmed_res.startswith('['):
+        return None
+        
+    return result
+
+def flatten_json(data):
+    """
+    Flattens a JSON object/list for CSV conversion.
+    """
+    if isinstance(data, list):
+        return [flatten_object(row) for row in data]
+    elif isinstance(data, dict):
+        return flatten_object(data)
+    return {}
+
+def flatten_object(obj, prefix='', result=None):
+    """
+    Recursively flattens an object.
+    """
+    if result is None:
+        result = {}
+        
+    if obj is None:
+        result[prefix] = None
+        return result
+        
+    # Attempt to parse string if it looks like JSON
+    if isinstance(obj, str):
+        trimmed = obj.strip()
+        if (trimmed.startswith('{') and trimmed.endswith('}')) or \
+           (trimmed.startswith('[') and trimmed.endswith(']')):
+            try:
+                import json
+                parsed = json.loads(obj)
+                flatten_object(parsed, prefix, result)
+                return result
+            except:
+                pass
+
+    if isinstance(obj, dict):
+        # Handle Date? Python datetime objects? Assuming inputs are mostly JSON-compatible types.
+        for key, value in obj.items():
+            new_key = f"{prefix}.{key}" if prefix else key
+            flatten_object(value, new_key, result)
+    elif isinstance(obj, list):
+         # Handle list inside object? 
+         # The JS version mainly handles Object recursion. 
+         # For CSV, lists inside columns usually become JSON strings or similar.
+         # But the JS code: 
+         # Object.keys(obj).forEach... works on arrays too (indices as keys).
+         for i, value in enumerate(obj):
+             new_key = f"{prefix}.{i}" if prefix else str(i)
+             flatten_object(value, new_key, result)
+    else:
+        # Primitive
+        result[prefix] = obj
+        
+    return result
+
+def unflatten_object(data):
+    """
+    Unflattens a JSON object (reverses flattening).
+    """
+    if not isinstance(data, dict) or data is None:
+        return data
+        
+    # Check if keys imply flattening (contain dots)
+    keys = list(data.keys())
+    has_dot = any('.' in k for k in keys)
+    
+    if not has_dot:
+        return data
+        
+    result = {}
+    for key, value in data.items():
+        parts = key.split('.')
+        current = result
+        for i, part in enumerate(parts[:-1]):
+            # Check if part implies array index?
+            # Python dicts are fine. We will produce dicts of dicts.
+            # If we want arrays, we'd need to infer from keys "0", "1"...
+            # The JS version uses: `r[e] || (r[e] = (keys.length - 1 === j ? data[i] : {}))`
+            # It builds objects.
+            
+            if part not in current:
+                current[part] = {}
+            current = current[part]
+            
+        current[parts[-1]] = value
         
     return result
 
@@ -362,3 +527,40 @@ def async_encryption_modulator(convertor_function):
             return await convertor_function(None, *args, **kwargs)
 
     return encryption_wrapper
+
+def build_tag(key, value):
+    if isinstance(value, dict):
+        # We need to process children to separate attributes from content
+        # But we can't easily separate them if we just recurse.
+        # We should peek inside `value` for `@attributes`.
+        key = sanitize_tag_name(key)
+        attrs = ""
+        content = ""
+        
+        # Process @attributes first
+        if "@attributes" in value:
+            attr_data = value["@attributes"]
+            for k, v in attr_data.items():
+                attrs += f' {k}="{v}"'
+        
+        # Process other keys
+        for k, v in value.items():
+            if k == "@attributes": continue
+            if k == "#text":
+                content += str(v)
+            else:
+                # Recurse
+                if isinstance(v, list):
+                    for item in v:
+                        content += build_tag(k, item)
+                else:
+                    content += build_tag(k, v)
+        
+        return f"<{key}{attrs}>{content}</{key}>"
+    
+    elif value is not None:
+        key = sanitize_tag_name(key)
+        return f"<{key}>{value}</{key}>"
+    else:
+        key = sanitize_tag_name(key)
+        return f"<{key} />"

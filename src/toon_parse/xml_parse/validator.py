@@ -16,7 +16,7 @@ def validate_xml_string(xml_string):
             encoded_xml = encode_xml_reserved_chars(xml_string)
             # Parse XML
             ET.fromstring(encoded_xml)
-        except ValueError as exception:
+        except Exception as exception:
             validation_status = {'is_valid': False, 'error': str(exception)}
 
     return validation_status
