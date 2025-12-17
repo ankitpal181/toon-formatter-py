@@ -15,6 +15,51 @@ A lightweight library to convert between **TOON** (Token-Oriented Object Notatio
 pip install toon-parse
 ```
 
+## 🔄 Unified Format Converters (New!)
+
+Beyond TOON, you can now convert directly between **JSON**, **YAML**, **XML**, and **CSV** using dedicated converter classes.
+
+```python
+from toon_parse import JsonConverter, YamlConverter, XmlConverter, CsvConverter
+
+# JSON <-> XML
+xml_output = JsonConverter.to_xml({"user": "Alice"})
+json_output = XmlConverter.to_json(xml_output)
+
+# CSV <-> YAML
+yaml_output = CsvConverter.to_yaml("id,name\n1,Alice")
+csv_output = YamlConverter.to_csv(yaml_output)
+```
+
+### Key Features
+- **Direct Conversion**: No need to convert to TOON first.
+- **Mixed Text Support**: `from_json`, `from_xml`, and `from_csv` methods automatically extract data from unstructured text.
+- **Return Types**:
+  - `JsonConverter.from_toon` and `from_yaml` support `return_json=True` (default) to return a dict/list, or `False` to return a JSON string.
+  - `YamlConverter.to_json` supports `return_json=True` (default) to return a dict/list.
+  - All other methods return **strings** (formatted xml, csv, yaml, etc.).
+
+### 🔐 Using Encryption with Unified Converters
+
+All new converters support the secure middleware pattern. Use the instance-based approach:
+
+```python
+from toon_parse import JsonConverter, Encryptor
+
+# 1. Setup Encryptor
+enc = Encryptor(algorithm='fernet', key=my_key)
+
+# 2. Initialize Converter with Encryptor
+converter = JsonConverter(encryptor=enc)
+
+# 3. Convert with security mode
+# Example: Decrypt input JSON -> convert to XML -> Encrypt output
+encrypted_xml = converter.to_xml(
+    encrypted_json_input, 
+    conversion_mode="middleware"
+)
+```
+
 ## 🚀 Quick Start
 
 ### Basic Usage (Synchronous)
@@ -214,23 +259,39 @@ The same applies to `AsyncToonConverter.validate()`.
 
 ### Core Converters
 
-#### `ToonConverter` (Synchronous)
-**Constructor**: `ToonConverter(encryptor: Encryptor = None)`
+#### `ToonConverter` (Legacy & Easy Use)
+- **Static & Instance**.
+- Central hub for converting **TOON <-> Any Format**.
 
-All conversion methods accept an optional `conversion_mode` argument:
-- `conversion_mode`: `"no_encryption"` (default), `"middleware"`, `"ingestion"`, `"export"`.
+#### `JsonConverter`
+- **Focus**: JSON <-> Any Format.
+- `from_toon(..., return_json=True)`
+- `from_yaml(..., return_json=True)`
+- `to_xml`, `to_csv`, `to_yaml`, `to_toon`
 
-- `from_json(data, conversion_mode=...)`: Converts dict/list/string to TOON.
-- `to_json(toon_string, return_json=True, conversion_mode=...)`: Converts TOON to Python/JSON.
-- `from_xml`, `from_csv`, `from_yaml`, `to_xml`, `to_csv`, `to_yaml`: Equivalent methods.
-- `validate(toon_string)`: **Static Method Only**. Validates TOON syntax. Does not support encryption.
+#### `YamlConverter`
+- **Focus**: YAML <-> Any Format.
+- `to_json(..., return_json=True)`
+- `from_json`, `from_xml`, `from_csv`, `from_toon`
 
-#### `AsyncToonConverter` (Asynchronous)
-**Constructor**: `AsyncToonConverter(encryptor: Encryptor = None)`
+#### `XmlConverter`
+- **Focus**: XML <-> Any Format.
+- `to_json` (returns JSON string), `from_json`, etc.
 
-- Mirrors all `ToonConverter` methods as `async` functions (e.g., `await conv.from_json(...)`).
-- Supports the same `conversion_mode` parameters for encryption pipelines.
-- `validate(toon_string)`: **Static Method Only**. Async validation. No encryption support.
+#### `CsvConverter`
+- **Focus**: CSV <-> Any Format.
+- `to_json` (returns JSON string), `from_json`, etc.
+
+**Note**: All `to_csv` methods return a string. If the input is nested JSON/Object, it will be automatically **flattened** (e.g., `user.name`) to fit the CSV format. Conversely, `from_csv` will **unflatten** dotted keys back into objects.
+
+### Async Converters
+Mirroring the synchronous classes, we have:
+- `AsyncJsonConverter`
+- `AsyncYamlConverter`
+- `AsyncXmlConverter`
+- `AsyncCsvConverter`
+
+Usage is identical, just use `await`.
 
 ### Encryption
 
