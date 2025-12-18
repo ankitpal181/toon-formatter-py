@@ -1,6 +1,6 @@
 # General
 __pycache__
-.pytest_cache
+.pytest_cache/
 
 # Python build artifacts
 dist/
