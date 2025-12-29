@@ -9,10 +9,33 @@ A lightweight library to convert between **TOON** (Token-Oriented Object Notatio
 - **Bug Reports**: https://github.com/ankitpal181/toon-formatter-py/issues
 - **POC Tool**: https://toonformatter.net/
 
-## 📦 Installation
-
 ```bash
 pip install toon-parse
+```
+
+## 🛠️ CLI Utility (New!)
+
+Convert data and validate formats directly from your terminal using the unified `toon-parse` command.
+
+### Features
+- **Streamlined**: Single command for all conversion types.
+- **Piping**: Full support for `stdin` and `stdout`.
+- **Validation**: Standalone format validation logic.
+- **Security**: Built-in support for all encryption modes.
+
+### Usage Examples
+```bash
+# 1. Basic Conversion (JSON to TOON)
+echo '{"name": "Alice"}' | toon-parse --from json --to toon
+
+# 2. File-based Conversion with Async core
+toon-parse --from xml --to json --input data.xml --output data.json --async
+
+# 3. Secure Export (JSON to Encrypted XML)
+toon-parse --from json --to xml --mode export --key <my_key> --input data.json
+
+# 4. Format Validation
+toon-parse --validate toon --input my_data.toon
 ```
 
 ## 🔄 Unified Format Converters (New!)

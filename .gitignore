@@ -1,6 +1,7 @@
 # General
 __pycache__
 .pytest_cache/
+.python-version
 
 # Python build artifacts
 dist/
@@ -9,5 +10,5 @@ build/
 
 # Python virtual environment (optional, but recommended)
 .venv/
-env/
+*env/
 venv/

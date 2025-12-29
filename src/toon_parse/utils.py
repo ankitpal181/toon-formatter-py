@@ -422,12 +422,12 @@ def get_function_signature_bindings(function, *args, **kwargs):
 
 def _populate_converter_arguments(function, *args, **kwargs):
     arguments, parameters = get_function_signature_bindings(function, *args, **kwargs)
-    param_names = list(parameters.keys())
-    
-    if arguments is None or len(param_names) < 2:
+
+    if arguments is None or len(parameters) < 2:
         # Original function will throw necessary errors
         raise TypeError("Invalid function signature")
-    
+
+    param_names = list(parameters.keys())    
     self = arguments.get('self')
     data_param_name = param_names[1]
     data = arguments.get(data_param_name)

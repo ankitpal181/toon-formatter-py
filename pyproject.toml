@@ -1,6 +1,9 @@
 [build-system]
-requires = ["setuptools>=61.0"]
+requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
 
 [project]
 name = "toon-parse"
@@ -11,15 +14,37 @@ authors = [
   { name="Ankit Pal", email="ankitpal181@gmail.com" },
 ]
 classifiers = [
-    "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: MIT License",
-    "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Software Development",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+  "Intended Audience :: Developers",
+  "Intended Audience :: Education",
+  "Development Status :: 5 - Production/Stable",
 ]
 requires-python = ">=3.10"
 dependencies = [
-    "PyYAML>=6.0",
-    "cryptography>=3.0",
+  "PyYAML>=6.0",
+  "cryptography>=3.0",
 ]
+
+[dependency-groups]
+dev = [
+  "build>=1.3.0",
+  "twine>=6.2.0",
+  {include-group = "test"},
+]
+test = [
+  "pytest>=8.0",
+  "pytest-cov>=4.0",
+  "pytest-asyncio>=1.3.0",
+]
+
+[project.scripts]
+toon-parse = "toon_parse.cli:main"
 
 [project.urls]
 "Documentation" = "https://toonformatter.net/docs.html?package=toon-parse"

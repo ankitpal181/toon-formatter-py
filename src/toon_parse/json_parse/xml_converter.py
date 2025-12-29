@@ -1,6 +1,6 @@
 import json
 import xml.etree.ElementTree as ET
-from ..utils import encode_xml_reserved_chars, extract_xml_from_string, build_tag
+from ..utils import encode_xml_reserved_chars, extract_xml_from_string, extract_json_from_string, build_tag
 
 
 def xml_to_json_object(element):
