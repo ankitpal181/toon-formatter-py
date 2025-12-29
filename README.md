@@ -58,8 +58,8 @@ csv_output = YamlConverter.to_csv(yaml_output)
 - **Direct Conversion**: No need to convert to TOON first.
 - **Mixed Text Support**: `from_json`, `from_xml`, and `from_csv` methods automatically extract data from unstructured text.
 - **Return Types**:
-  - `JsonConverter.from_toon` and `from_yaml` support `return_json=True` (default) to return a dict/list, or `False` to return a JSON string.
-  - `YamlConverter.to_json` supports `return_json=True` (default) to return a dict/list.
+  - `JsonConverter.from_toon` and `from_yaml` support `return_json=True` (default) to return a JSON string, or `False` to return a dict/list.
+  - `YamlConverter.to_json` supports `return_json=True` (default) to return a JSON string.
   - All other methods return **strings** (formatted xml, csv, yaml, etc.).
 
 ### 🔐 Using Encryption with Unified Converters

@@ -7,7 +7,7 @@ where = ["src"]
 
 [project]
 name = "toon-parse"
-version = "2.1.2"
+version = "2.2.0"
 description = "A lightweight library to convert between TOON (Token-Oriented Object Notation) and popular data formats (JSON, YAML, XML, CSV)."
 readme = "README.md"
 authors = [
