@@ -15,56 +15,56 @@ class StreamToonConverter:
         self.last_output = ""
 
     @stream_modulator
-    def from_json(self, json_data):
+    def from_json(self, json_data, **kwargs):
         """
         Convert JSON-compatible data to TOON.
         """
         return json_to_toon(json_data)
 
     @stream_modulator
-    def to_json(self, toon_string, return_json=True):
+    def to_json(self, toon_string, return_json=True, **kwargs):
         """
         Convert TOON to JSON-compatible data.
         """
         return toon_to_json(toon_string, return_json)
 
     @stream_modulator
-    def from_yaml(self, yaml_string):
+    def from_yaml(self, yaml_string, **kwargs):
         """
         Convert YAML to TOON.
         """
         return yaml_to_toon(yaml_string)
 
     @stream_modulator
-    def to_yaml(self, toon_string):
+    def to_yaml(self, toon_string, **kwargs):
         """
         Convert TOON to YAML.
         """
         return toon_to_yaml(toon_string)
 
     @stream_modulator
-    def from_xml(self, xml_string):
+    def from_xml(self, xml_string, **kwargs):
         """
         Convert XML to TOON.
         """
         return xml_to_toon(xml_string)
 
     @stream_modulator
-    def to_xml(self, toon_string):
+    def to_xml(self, toon_string, **kwargs):
         """
         Convert TOON to XML.
         """
         return toon_to_xml(toon_string)
 
     @stream_modulator
-    def from_csv(self, csv_string):
+    def from_csv(self, csv_string, **kwargs):
         """
         Convert CSV to TOON.
         """
         return csv_to_toon(csv_string)
 
     @stream_modulator
-    def to_csv(self, toon_string):
+    def to_csv(self, toon_string, **kwargs):
         """
         Convert TOON to CSV.
         """

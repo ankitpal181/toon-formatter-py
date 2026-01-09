@@ -2,7 +2,7 @@ import argparse
 import sys
 import asyncio
 from .. import (
-    ToonConverter, AsyncToonConverter,
+    ToonConverter, AsyncToonConverter, StreamToonConverter,
     JsonConverter, AsyncJsonConverter,
     YamlConverter, AsyncYamlConverter,
     XmlConverter, AsyncXmlConverter,
@@ -30,6 +30,10 @@ def main():
         help="Use asynchronous converters"
     )
     parser.add_argument(
+        "--stream", dest="is_stream", action="store_true",
+        help="Use stream converters [works for toon conversions only]"
+    )
+    parser.add_argument(
         "-m", "--mode", choices=["no_encryption", "middleware", "ingestion", "export"],
         default="no_encryption", help="Conversion mode"
     )
@@ -51,6 +55,8 @@ def main():
     # Manual requirement check
     if not args.format_to_validate and (not args.from_format or not args.to_format):
         parser.error("The following arguments are required: --from and --to (unless --validate is used)")
+    elif args.is_stream and args.is_async:
+        parser.error("Stream converters cannot be used with asynchronous converters")
 
     # Read Input
     if args.input:
@@ -92,12 +98,16 @@ def run_conversion(data, args, encryptor):
     from_fmt = args.from_format
     to_fmt = args.to_format
     is_async = args.is_async
+    is_stream = args.is_stream
     mode = args.mode
     return_json = not args.no_parse
 
     # Set converter map
     if from_fmt == 'toon' or to_fmt == 'toon':
-        conv = AsyncToonConverter(encryptor=encryptor) if is_async else ToonConverter(encryptor=encryptor)
+        if is_stream: conv = StreamToonConverter()
+        elif is_async: conv = AsyncToonConverter(encryptor=encryptor)
+        else: conv = ToonConverter(encryptor=encryptor)
+
         method_map = {
             ('json', 'toon'): conv.from_json,
             ('toon', 'json'): lambda d, **kwargs: conv.to_json(d, return_json=return_json, **kwargs),
