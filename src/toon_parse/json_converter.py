@@ -338,4 +338,3 @@ def json_to_toon(data, key='', depth=0):
     else:
         # Handle dict, list, or primitives
         return json_to_toon_parser(data, key, depth)
-

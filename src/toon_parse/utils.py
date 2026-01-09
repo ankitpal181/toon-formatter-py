@@ -528,6 +528,42 @@ def async_encryption_modulator(convertor_function):
 
     return encryption_wrapper
 
+def stream_modulator(convertor_function):
+    def stream_wrapper(*args, **kwargs):
+        try:
+            self, data, conversion_mode, return_json, keyword_args = _populate_converter_arguments(
+                convertor_function, *args, **kwargs
+            )
+            self.last_input += str(data)
+            converted_data = convertor_function(self, self.last_input, **keyword_args)
+
+            # --- Partial Data Check ---
+            # Heuristic: If input looks like start of structure ({ or [ or <) but output is a primitive string 
+            # (which means fallback occurred), treat it as incomplete and wait.
+            trimmed_input = self.last_input.strip()
+            if trimmed_input and (trimmed_input.startswith('{') or trimmed_input.startswith('[') or trimmed_input.startswith('<')):
+                # Reconstruct what the primitive fallback output looks like: "{escaped_input}"
+                # We need to match the behavior of format_value logic implicitly.
+                # Assuming json_to_toon/others return quoted string for fallback.
+                escaped = self.last_input.replace('"', '\\"')
+                primitive_out = f'"{escaped}"'
+                
+                if converted_data == primitive_out:
+                    return "" # Return empty delta, do NOT update last_output
+
+                # XML Helper: xml_to_toon returns valid input string if no XML found (identity).
+                # If input starts with <, and output equals input, it might be incomplete XML.
+                if trimmed_input.startswith('<') and converted_data == self.last_input:
+                    return ""
+
+            delta = converted_data[len(self.last_output):]
+            self.last_output = converted_data
+            return delta
+        except Exception as ex:
+            return ""
+
+    return stream_wrapper
+
 def build_tag(key, value):
     if isinstance(value, dict):
         # We need to process children to separate attributes from content
