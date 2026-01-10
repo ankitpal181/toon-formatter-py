@@ -564,3 +564,95 @@ def build_tag(key, value):
     else:
         key = sanitize_tag_name(key)
         return f"<{key} />"
+
+def is_code(value):
+    if not isinstance(value, str) or len(value) < 5: return False
+
+    is_single_line_command = any([
+        re.match(r"^(npm|yarn|pnpm|pip|pip3|brew|apt|gem|go|cargo|composer|mvn|gradle|dotnet|conda)\s+", value.strip()),
+        re.match(r"^(git|docker|kubectl|curl|wget|ssh|scp|rsync|sudo)\s+", value.strip()),
+        re.match(r"^(node|python|python3|ruby|java|go|rust)\s+", value.strip()),
+        value.strip().startswith(("$", ">", "#"))
+    ])
+
+    if is_single_line_command: return True
+
+    has_multiple_lines = re.search(r"\n", value.strip())
+    has_code_patterns = re.search(r"import|require\(|function |const |let |var |class |def |async |=\u003e|\[|\]|;", value.strip())
+    has_indentation = re.search(r"^\s+", value.strip())
+    starts_with_shebang = value.strip().startswith("#!")
+
+    return has_multiple_lines and (has_code_patterns or has_indentation or starts_with_shebang)
+
+def extract_code_blocks(text):
+    if not isinstance(text, str): return []
+
+    results = []
+    markdown_pattern = r"```(?:[\w\-\+]+)?\s*(.*?)```"
+    markdown_matches = list(re.finditer(markdown_pattern, text, re.DOTALL))
+    
+    if markdown_matches:
+        for m in markdown_matches:
+            results.append({
+                'code': m.group(1).strip(),
+                'start': m.start(),
+                'end': m.end()
+            })
+        
+        return results
+
+    current_pos = 0
+    while True:
+        try:
+            next_break = text.index('\n\n', current_pos)
+            chunk = text[current_pos:next_break]
+            chunk_end = next_break
+            next_start = next_break + 2 # skip \n\n
+        except ValueError:
+            # No more double newlines, take the rest
+            chunk = text[current_pos:]
+            chunk_end = len(text)
+            next_start = len(text)
+        
+        clean_chunk = chunk.strip()
+
+        if clean_chunk and is_code(clean_chunk):
+            results.append({
+                'code': clean_chunk,
+                'start': current_pos,
+                'end': chunk_end
+            })
+        
+        current_pos = next_start
+        if current_pos >= len(text): break
+
+    return results
+
+def reduce_code_block(code_block: str) -> str:
+    code_block = code_block.replace("\n\n", "\n")
+    code_block = re.sub(r"#.*", "", code_block)
+    code_block = re.sub(r"//.*", "", code_block)
+    code_block = code_block.replace("\n\n", "\n")
+    return code_block.strip()
+
+def data_manager(convertor_function):
+    def manager(*args, **kwargs):
+        data = args[0]
+        if not isinstance(data, str):
+            return convertor_function(*args, **kwargs)
+
+        code_blocks = extract_code_blocks(data)
+
+        for index, block in enumerate(code_blocks[::-1]):
+            data = data[:block["start"]] + f"#code#{index}#code#" + data[block["end"]:]
+        
+        data = data.replace("\n\n", "\n")
+        converted_data = convertor_function(data.strip())
+
+        for index, block in enumerate(code_blocks[::-1]):
+            reduced_code = reduce_code_block(block["code"])
+            converted_data = converted_data.replace(f"#code#{index}#code#", reduced_code)
+
+        return converted_data
+
+    return manager
