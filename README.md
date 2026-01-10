@@ -1,5 +1,9 @@
 # 🚀 TOON Converter (Python)
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.10 | 3.11 | 3.12 | 3.13](https://img.shields.io/badge/python-3.10%20|%203.11%20|%203.12%20|%203.13-blue.svg)](https://www.python.org/downloads/)
+[![LLM APIs cost reduction](https://img.shields.io/badge/LLM%20APIs-Up%20to%2040%25%20cost%20reduction-orange)]
+
 A lightweight library to convert between **TOON** (Token-Oriented Object Notation) and popular data formats (JSON, YAML, XML, CSV).
 
 **Reduce your LLM token costs by up to 40%** using the TOON format!
@@ -134,6 +138,18 @@ print(result)
 # roles[2]: "admin", "editor"
 # Please verify this information.
 ```
+
+### 🧠 Smart Code Optimization
+
+The library includes an intelligent **Data Manager** that preprocesses input to handle code blocks efficiently.
+
+-   **Code Preservation**: Code snippets (e.g., inside markdown backticks or detected via heuristics) are identified and protected from conversion logic.
+-   **Context Reduction**: Code blocks are automatically optimized to reduce token usage by:
+    -   Removing comments (`# ...`, `// ...`).
+    -   Compressing double newlines to single newlines.
+    -   Stripping unnecessary whitespace.
+
+This ensures that while your data is converted to TOON for efficiency, any embedded code remains syntactically valid but token-optimized.
 
 ### 🔐 Secure Conversion Middleware (New!)
 
