@@ -1,6 +1,6 @@
 import xml.etree.ElementTree as ET
 from .json_converter import json_to_toon, toon_to_json
-from .utils import encode_xml_reserved_chars, extract_xml_from_string, build_tag
+from .utils import encode_xml_reserved_chars, extract_xml_from_string, build_tag, data_manager
 
 def xml_to_json_object(element):
     """
@@ -52,6 +52,7 @@ def xml_to_json_object(element):
 
     return obj
 
+@data_manager
 def xml_to_toon(xml_string):
     """
     Converts XML to TOON format.

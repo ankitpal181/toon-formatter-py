@@ -1,8 +1,9 @@
 import json, yaml
-from ..utils import extract_xml_from_string
+from ..utils import extract_xml_from_string, data_manager
 from ..json_parse import xml_to_json, json_to_xml
 
 
+@data_manager
 def xml_to_yaml(xml_string):
     """
     Converts XML to YAML format.

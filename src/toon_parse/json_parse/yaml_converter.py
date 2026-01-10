@@ -1,5 +1,5 @@
 import yaml, json
-from ..utils import extract_json_from_string
+from ..utils import extract_json_from_string, data_manager
 
 def yaml_to_json(yaml_string, return_json=False):
     """
@@ -14,6 +14,7 @@ def yaml_to_json(yaml_string, return_json=False):
     except yaml.YAMLError as e:
         raise ValueError(f"Invalid YAML: {e}")
 
+@data_manager
 def json_to_yaml(data):
     """
     Converts JSON to YAML format.

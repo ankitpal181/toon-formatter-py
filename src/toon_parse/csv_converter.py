@@ -1,8 +1,9 @@
 import csv, io
 from .json_converter import json_to_toon, toon_to_json
-from .utils import extract_csv_from_string, flatten_json, unflatten_object
+from .utils import extract_csv_from_string, flatten_json, unflatten_object, data_manager
 
 
+@data_manager
 def csv_to_toon(csv_string):
     """
     Converts CSV to TOON format.

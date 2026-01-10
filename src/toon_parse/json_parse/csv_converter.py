@@ -1,7 +1,8 @@
 import csv, json, io
-from ..utils import extract_csv_from_string, extract_json_from_string, flatten_json, unflatten_object
+from ..utils import extract_csv_from_string, extract_json_from_string, flatten_json, unflatten_object, data_manager
 
 
+@data_manager
 def csv_to_json(csv_string):
     """
     Converts CSV to JSON format.
@@ -54,6 +55,7 @@ def _infer_type(val):
     except ValueError:
         return val
 
+@data_manager
 def json_to_csv(data):
     """
     Converts JSON to CSV format.

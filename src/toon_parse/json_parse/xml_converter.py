@@ -1,6 +1,6 @@
 import json
 import xml.etree.ElementTree as ET
-from ..utils import encode_xml_reserved_chars, extract_xml_from_string, extract_json_from_string, build_tag
+from ..utils import encode_xml_reserved_chars, extract_xml_from_string, extract_json_from_string, build_tag, data_manager
 
 
 def xml_to_json_object(element):
@@ -53,6 +53,7 @@ def xml_to_json_object(element):
 
     return obj
 
+@data_manager
 def xml_to_json(xml_string):
     """
     Converts XML to JSON format.
@@ -87,6 +88,7 @@ def xml_to_json(xml_string):
 
     return converted_text
 
+@data_manager
 def json_to_xml(data):
     """
     Converts JSON to XML format.

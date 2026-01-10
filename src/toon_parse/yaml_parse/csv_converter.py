@@ -1,8 +1,9 @@
 import json
-from ..utils import extract_csv_from_string
+from ..utils import extract_csv_from_string, data_manager
 from ..json_parse import csv_to_json, json_to_csv
 
 
+@data_manager
 def csv_to_yaml(csv_string):
     """
     Converts CSV to YAML format.

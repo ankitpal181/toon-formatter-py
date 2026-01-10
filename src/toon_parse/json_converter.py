@@ -1,4 +1,4 @@
-from .utils import format_value, parse_value, split_by_delimiter, extract_json_from_string
+from .utils import format_value, parse_value, split_by_delimiter, extract_json_from_string, data_manager
 from .validator import validate_toon_string
 import re, json
 
@@ -99,7 +99,6 @@ def json_to_toon_parser(data, key='', depth=0):
         lines.append(block)
 
     return "\n".join(lines)
-
 
 def toon_to_json(toon_string, return_json=False):
     """
@@ -308,7 +307,7 @@ def toon_to_json(toon_string, return_json=False):
     return json.dumps(root) if return_json else root
 
 
-
+@data_manager
 def json_to_toon(data, key='', depth=0):
     # Handle string input (JSON text or mixed text)
     if isinstance(data, str):
