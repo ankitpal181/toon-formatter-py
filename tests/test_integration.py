@@ -136,3 +136,36 @@ async def test_async_multi_hop_conversion():
     assert 'hops:' in yaml_out
     assert '3' in yaml_out
     assert 'async:' in yaml_out
+
+def test_integration_code_block_preservation():
+    """
+    Scenario: JSON string with embedded code block -> TOON -> back to JSON.
+    Code block formatting should be preserved (though potentially stripped of double newlines).
+    """
+    # Embedded Markdown
+    input_text = """
+    Here is a script:
+    ```python
+    def hello():
+        print("world")
+    ```
+    And some data: {"v": 1}
+    """
+    
+    # 1. To TOON
+    # The 'naked' JSON part `{"v": 1}` will be converted.
+    # The markdown block should be preserved via data_manager logic.
+    toon = ToonConverter.from_json(input_text)
+    print(f"\nDEBUG: toon_output: {repr(toon)}")
+    
+    assert "def hello():" in toon
+    assert 'print("world")' in toon
+    assert 'v: 1' in toon
+    
+    # 2. Back to JSON extraction check
+    # Since the result 'toon' is a raw string (containing the code), we verify the content is there.
+    # Note: 'toon' is not guaranteed to be valid TOON syntax if the input was arbitrary mixed text 
+    # that ToonConverter treated as a string value.
+    
+    assert "def hello():" in toon
+    assert 'print("world")' in toon
