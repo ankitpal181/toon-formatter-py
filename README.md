@@ -1,10 +1,11 @@
 # 🚀 TOON Converter (Python)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python 3.10 | 3.11 | 3.12 | 3.13](https://img.shields.io/badge/python-3.10%20|%203.11%20|%203.12%20|%203.13-blue.svg)](https://www.python.org/downloads/)
+[![Python 3.10 | 3.11 | 3.12 | 3.13](https://img.shields.io/badge/Python-3.10%20|%203.11%20|%203.12%20|%203.13-blue.svg)](https://www.python.org/downloads/)
 [![LLM APIs cost reduction](https://img.shields.io/badge/LLM%20APIs-Up%20to%2040%25%20cost%20reduction-orange)](https://toonformatter.net/)
+[![PyPI Downloads](https://static.pepy.tech/personalized-badge/toon-parse?period=total&units=INTERNATIONAL_SYSTEM&left_color=GRAY&right_color=GREEN&left_text=Downloads)](https://pepy.tech/projects/toon-parse)
 
-A lightweight library to convert between **TOON** (Token-Oriented Object Notation) and popular data formats (JSON, YAML, XML, CSV).
+A powerful context reduction tool centered around converting data (JSON, YAML, XML, CSV) to **TOON** (Token-Oriented Object Notation) format for efficient LLM interactions.
 
 **Reduce your LLM token costs by up to 40%** using the TOON format!
 
@@ -17,7 +18,7 @@ A lightweight library to convert between **TOON** (Token-Oriented Object Notatio
 pip install toon-parse
 ```
 
-## 🛠️ CLI Utility (New!)
+## 🛠️ CLI Utility
 
 Convert data and validate formats directly from your terminal using the unified `toon-parse` command.
 
@@ -42,7 +43,7 @@ toon-parse --from json --to xml --mode export --key <my_key> --input data.json
 toon-parse --validate toon --input my_data.toon
 ```
 
-## 🔄 Unified Format Converters (New!)
+## 🔄 Unified Format Converters
 
 Beyond TOON, you can now convert directly between **JSON**, **YAML**, **XML**, and **CSV** using dedicated converter classes.
 
@@ -139,7 +140,7 @@ print(result)
 # Please verify this information.
 ```
 
-### 🧠 Smart Code Optimization
+### 🧠 Smart Code Optimization (New!)
 
 The library includes an intelligent **Data Manager** that preprocesses input to handle code blocks efficiently.
 
@@ -151,7 +152,22 @@ The library includes an intelligent **Data Manager** that preprocesses input to 
 
 This ensures that while your data is converted to TOON for efficiency, any embedded code remains syntactically valid but token-optimized.
 
-### 🔐 Secure Conversion Middleware (New!)
+### 📉 Context Optimization (Expensive Words) (New!)
+
+The library automatically identifies and replaces common "expensive" phrases with token-efficient alternatives to reduce the overall payload size required for LLM input.
+
+> **Note**: While most alterations significantly reduce token count, some replacements may only reduce character count while keeping the token count the same. This still helps in reducing the API payload size (in bytes), which can reduce latency and cost for bandwidth-constrained environments.
+
+**Examples:**
+-   `"large language model"` → `"llm"`
+-   `"frequently asked questions"` → `"faq"`
+-   `"as soon as possible"` → `"asap"`
+-   `"do not"` → `"don't"`
+-   `"I am"` → `"i'm"`
+
+This feature is **case-insensitive** and ensures that words inside code blocks and data blocks are **NOT** altered.
+
+### 🔐 Secure Conversion Middleware
 
 The `ToonConverter` can act as a **secure middleware** for processing encrypted data streams (e.g., from microservices). It handles the full **Decrypt -> Convert -> Encrypt** pipeline internally.
 
