@@ -1,5 +1,6 @@
 import re
 import inspect
+from .constants import EXPENSIVE_WORDS
 
 def encode_xml_reserved_chars(raw_xml_string):
     """
@@ -635,6 +636,10 @@ def reduce_code_block(code_block: str) -> str:
     code_block = code_block.replace("\n\n", "\n")
     return code_block.strip()
 
+def alter_expensive_words(text: str) -> str:
+    pattern = re.compile(r'\b(' + '|'.join(re.escape(key) for key in EXPENSIVE_WORDS.keys()) + r')\b', re.IGNORECASE)
+    return pattern.sub(lambda match: EXPENSIVE_WORDS[match.group(0).lower()], text)
+
 def data_manager(convertor_function):
     def manager(*args, **kwargs):
         data = args[0]
@@ -642,12 +647,36 @@ def data_manager(convertor_function):
             return convertor_function(*args, **kwargs)
 
         code_blocks = extract_code_blocks(data)
+        data_blocks = []
+        iteration_count = 0
+        max_iterations = 100
+        convertor_function_name = convertor_function.__name__
 
         for index, block in enumerate(code_blocks[::-1]):
             data = data[:block["start"]] + f"#code#{index}#code#" + data[block["end"]:]
-        
+
+        while iteration_count < max_iterations:
+            if "json_to" in convertor_function_name: block = extract_json_from_string(data)
+            elif "xml_to" in convertor_function_name: block = extract_xml_from_string(data)
+            elif "csv_to" in convertor_function_name: block = extract_csv_from_string(data)
+            else: block = None
+            if not block: break
+            
+            data_blocks.append(block)
+            data = data.replace(block, f"#data#{iteration_count}#data#")
+            iteration_count += 1
+
+        data = alter_expensive_words(data)
         data = data.replace("\n\n", "\n")
-        converted_data = convertor_function(data.strip())
+        converted_data = data.strip()
+        
+        if data_blocks:
+            for index in range(len(data_blocks)-1, -1, -1):
+                block = data_blocks[index]
+                converted_block = convertor_function(block.strip())
+                converted_data = converted_data.replace(f"#data#{index}#data#", converted_block)
+        else:
+            converted_data = convertor_function(converted_data)
 
         for index, block in enumerate(code_blocks[::-1]):
             reduced_code = reduce_code_block(block["code"])
