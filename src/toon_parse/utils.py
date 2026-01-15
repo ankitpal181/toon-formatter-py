@@ -633,7 +633,7 @@ def reduce_code_block(code_block: str) -> str:
     code_block = code_block.replace("\n\n", "\n")
     code_block = re.sub(r"#.*", "", code_block)
     code_block = re.sub(r"//.*", "", code_block)
-    code_block = code_block.replace("\n\n", "\n")
+    code_block = re.sub(r"\s*\n", "\n", code_block)
     return code_block.strip()
 
 def alter_expensive_words(text: str) -> str:
