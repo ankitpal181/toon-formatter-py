@@ -15,24 +15,26 @@ def test_data_manager_no_code():
     assert dummy_converter(text) == text
 
 def test_data_manager_single_block():
+    # Heuristic based block
     text = """
 Start
-```
-code content
-```
+
+def foo():
+    return 1
+
 End
     """
     result = dummy_converter(text)
-    assert "code content" in result
+    assert "def foo():" in result
     assert "Start" in result
 
 def test_data_manager_multiple_blocks_order():
     # Regression test for index bug
-    text = "Block1:\n```\ncode1\n```\nBlock2:\n```\ncode2\n```"
+    text = "Block1:\n\nimport os\n\nBlock2:\n\nclass MyClass:\n    pass"
     result = dummy_converter(text)
     
-    idx1 = result.find("code1")
-    idx2 = result.find("code2")
+    idx1 = result.find("import os")
+    idx2 = result.find("class MyClass:")
     
     assert idx1 != -1
     assert idx2 != -1
@@ -42,10 +44,7 @@ def test_data_manager_preserves_content_while_converting():
     # Verify that code blocks are NOT affected by converter logic
     # while outside text IS affected
     
-    text = "outside\n```\ninside code\n```"
-    
-    # dummy_converter_upper upper-cases everything
-    # But data_manager should protect code blocks
+    text = "outside\n\ndef my_code():\n    pass"
     
     result = dummy_wrapper(text)
     
@@ -53,13 +52,11 @@ def test_data_manager_preserves_content_while_converting():
     assert "WRAPPED(" in result
     assert "outside" in result
     
-    # "inside code" should remain "inside code" and be preserved
-    assert "inside code" in result
+    # "my_code" should remain "my_code" and be preserved
+    assert "def my_code():" in result
     
-    # Ensure code is NOT double-wrapped or mangled? 
-    # The placeholder was wrapped, then replaced by code.
-    # So result: "WRAPPED(outside\ncode...)"
-    assert "inside code" in result
+    # Ensure code is NOT mangled
+    assert "def my_code():" in result
 
 def test_data_manager_naked_code():
     # Test with heuristic-based naked code blocks

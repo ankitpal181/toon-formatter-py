@@ -86,28 +86,17 @@ def test_code_block_preservation_with_expensive_words():
     converter = ToonConverter()
     
     # "do not" is expensive -> "don't"
-    # But inside python code `if do not` (syntax error but valid string) or comment
-    # it should stay as is.
-    
-    input_text = "I do not like this code:\n```python\n# do not change me\nx = 1\n```"
+    # We use double newlines to separate the code block as per new heuristic.
+    input_text = "I do not like this code:\n\ndef foo():\n    print('do not change me')\n    return 1\n\nEnd of code."
     
     output = converter.from_json(input_text)
     
-    # Outside: "I do not" -> "I don't" (or "i'm" etc depending on dictionary)
-    # "do not" -> "don't"
-    assert "don't" in output.split("```")[0].lower() or "do not" not in output.split("```")[0].lower()
+    # Outside: "I do not" -> "I don't"
+    assert "don't" in output.lower()
     
-    # Inside: "# do not change me" should remain "# do not change me"
-    # Wait, `reduce_code_block` removes comments! 
-    # utils.py: reduced_code = re.sub(r"#.*", "", code_block)
-    # So comments are stripped.
-    # Let's use a string literal instead.
-    
-    input_text_2 = "Text:\n```python\nprint('do not change me')\n```"
-    output_2 = converter.from_json(input_text_2)
-    
-    assert "print('do not change me')" in output_2
-    assert "print('don't change me')" not in output_2
+    # Inside: "do not change me" should remain "do not change me"
+    assert "print('do not change me')" in output
+    assert "print('don't change me')" not in output
 
 def test_multiple_data_blocks():
     """Verify handling of multiple embedded data blocks."""

@@ -7,7 +7,7 @@ where = ["src"]
 
 [project]
 name = "toon-parse"
-version = "2.4.1"
+version = "2.4.2"
 description = "A powerful context reduction tool centered around converting data (JSON, YAML, XML, CSV) to the token-optimized TOON format for efficient LLM interactions."
 readme = "README.md"
 authors = [

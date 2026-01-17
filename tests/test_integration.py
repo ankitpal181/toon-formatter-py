@@ -142,20 +142,22 @@ def test_integration_code_block_preservation():
     Scenario: JSON string with embedded code block -> TOON -> back to JSON.
     Code block formatting should be preserved (though potentially stripped of double newlines).
     """
-    # Embedded Markdown
+    # Embedded Code separated by double newlines
     input_text = """
-    Here is a script:
-    ```python
-    def hello():
-        print("world")
-    ```
-    And some data: {"v": 1}
-    """
+Here is a script:
+
+def hello():
+    print("world")
+
+And some data:
+
+{"v": 1}
+"""
     
     # 1. To TOON
     # The 'naked' JSON part `{"v": 1}` will be converted.
-    # The markdown block should be preserved via data_manager logic.
-    toon = ToonConverter.from_json(input_text)
+    # The code block should be preserved via data_manager logic.
+    toon = ToonConverter.from_json(input_text.strip())
     print(f"\nDEBUG: toon_output: {repr(toon)}")
     
     assert "def hello():" in toon

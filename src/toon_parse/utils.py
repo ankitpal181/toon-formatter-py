@@ -589,19 +589,6 @@ def extract_code_blocks(text):
     if not isinstance(text, str): return []
 
     results = []
-    markdown_pattern = r"```(?:[\w\-\+]+)?\s*(.*?)```"
-    markdown_matches = list(re.finditer(markdown_pattern, text, re.DOTALL))
-    
-    if markdown_matches:
-        for m in markdown_matches:
-            results.append({
-                'code': m.group(1).strip(),
-                'start': m.start(),
-                'end': m.end()
-            })
-        
-        return results
-
     current_pos = 0
     while True:
         try:
@@ -634,6 +621,7 @@ def reduce_code_block(code_block: str) -> str:
     code_block = re.sub(r"#.*", "", code_block)
     code_block = re.sub(r"//.*", "", code_block)
     code_block = re.sub(r"\s*\n", "\n", code_block)
+    code_block = code_block.replace("\n\n", "\n")
     return code_block.strip()
 
 def alter_expensive_words(text: str) -> str:

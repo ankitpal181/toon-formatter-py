@@ -144,7 +144,7 @@ print(result)
 
 The library includes an intelligent **Data Manager** that preprocesses input to handle code blocks efficiently.
 
--   **Code Preservation**: Code snippets (e.g., inside markdown backticks or detected via heuristics) are identified and protected from conversion logic.
+-   **Code Preservation**: Code snippets (detected via heuristics) are identified and protected from conversion logic.
 -   **Context Reduction**: Code blocks are automatically optimized to reduce token usage by:
     -   Removing comments (`# ...`, `// ...`).
     -   Compressing double newlines to single newlines.
