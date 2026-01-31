@@ -124,10 +124,12 @@ def extract_json_from_string(text):
     for i, char in enumerate(text):
         if char == '{' or char == '[':
             # Ignore if preceded by non-whitespace (e.g. key[2]), unless it's a closing bracket/brace or XML tag end
-            # JS: if (i > 0 && /\S/.test(text[i - 1]) && !/[\}\]>]/.test(text[i - 1]))
             if i > 0:
                 prev_char = text[i-1]
-                if not prev_char.isspace() and prev_char not in ('}', ']', '>'):
+                toon_array_end_index = re.search(r"\]{", text[i:]).span()[0]
+                if toon_array_end_index and re.fullmatch(r"\[\d*", text[i:toon_array_end_index]):
+                    continue
+                elif not prev_char.isspace() and prev_char not in ('}', ']', '>'):
                     continue
             
             start_index = i
@@ -579,7 +581,7 @@ def is_code(value):
     if is_single_line_command: return True
 
     has_multiple_lines = re.search(r"\n", value.strip())
-    has_code_patterns = re.search(r"import|require\(|function |const |let |var |class |def |async |=\u003e|\[|\]|;", value.strip())
+    has_code_patterns = re.search(r"import|require\(|function |const |let |var |class |def |async |=\u003e|;|print\(|console\.log\(", value.strip())
     has_indentation = re.search(r"^\s+", value.strip())
     starts_with_shebang = value.strip().startswith("#!")
 
