@@ -1,4 +1,5 @@
 import re
+import concurrent.futures
 import inspect
 from .constants import EXPENSIVE_WORDS
 
@@ -126,10 +127,12 @@ def extract_json_from_string(text):
             # Ignore if preceded by non-whitespace (e.g. key[2]), unless it's a closing bracket/brace or XML tag end
             if i > 0:
                 prev_char = text[i-1]
-                toon_array_end_index = re.search(r"\]{", text[i:]).span()[0]
-                if toon_array_end_index and re.fullmatch(r"\[\d*", text[i:toon_array_end_index]):
-                    continue
-                elif not prev_char.isspace() and prev_char not in ('}', ']', '>'):
+                toon_array_end_match = re.search(r"\]{", text[i:])
+                if toon_array_end_match:
+                    toon_array_end_index = toon_array_end_match.span()[0]
+                    if re.fullmatch(r"\[\d*", text[i:i+toon_array_end_index]):
+                        continue
+                if not prev_char.isspace() and prev_char not in ('}', ']', '>'):
                     continue
             
             start_index = i
@@ -657,7 +660,7 @@ def data_manager(convertor_function):
             iteration_count += 1
 
         data = alter_expensive_words(data)
-        data = data.replace("\n\n", "\n")
+        data = data.replace("\n\n\n", "\n\n")
         converted_data = data.strip()
         
         if data_blocks:
@@ -675,3 +678,49 @@ def data_manager(convertor_function):
         return converted_data
 
     return manager
+
+def run_in_parallel(function_to_execute, instance, data, **kwargs):
+    results = []
+    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+        if instance:
+            future_executions = [executor.submit(function_to_execute, instance, datum, **kwargs) for datum in data]
+        else:
+            future_executions = [executor.submit(function_to_execute, datum, **kwargs) for datum in data]
+
+        for future in concurrent.futures.as_completed(future_executions):
+            try:
+                results.append(future.result())
+            except Exception as exc:
+                print(f'{function_to_execute.__name__} generated an exception: {exc}')
+
+    return results
+
+def batch_modulator(convertor_function):
+    def batch_wrapper(*args, **kwargs):
+        instance = args[0] if args else None
+        if hasattr(instance, 'encryptor'):
+            data = args[1]
+        else:
+            data = args[0]
+            instance = None
+
+        if isinstance(data, list):
+            parallel = kwargs.get("parallel", False)
+            if parallel:
+                return run_in_parallel(encryption_modulator(convertor_function), instance, data, **kwargs)
+            else:
+                if instance is not None:
+                    return [
+                        encryption_modulator(convertor_function)(instance, datum, **kwargs) for datum in data
+                    ]
+                else:
+                    return [
+                        encryption_modulator(convertor_function)(datum, **kwargs) for datum in data
+                    ]
+        elif isinstance(data, str):
+            with open(data, "r") as file:
+                return encryption_modulator(convertor_function)(instance, file.read(), **kwargs)
+        else:
+            raise ValueError("Data must be a list or readable buffer")
+
+    return batch_wrapper
