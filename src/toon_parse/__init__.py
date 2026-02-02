@@ -105,9 +105,10 @@ from .yaml_parse import YamlConverter, AsyncYamlConverter, BatchYamlConverter
 from .xml_parse import XmlConverter, AsyncXmlConverter, BatchXmlConverter
 from .csv_parse import CsvConverter, AsyncCsvConverter, BatchCsvConverter
 from .batch_converter import BatchToonConverter
+from .async_batch_converter import AsyncBatchToonConverter
 
 __all__ = [
-    'ToonConverter', 'AsyncToonConverter', 'BatchToonConverter',
+    'ToonConverter', 'AsyncToonConverter', 'BatchToonConverter', 'AsyncBatchToonConverter',
     'JsonConverter', 'AsyncJsonConverter', 'BatchJsonConverter',
     'YamlConverter', 'AsyncYamlConverter', 'BatchYamlConverter',
     'XmlConverter', 'AsyncXmlConverter', 'BatchXmlConverter',

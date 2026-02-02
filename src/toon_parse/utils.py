@@ -1,5 +1,6 @@
 import re
 import concurrent.futures
+import asyncio
 import inspect
 from .constants import EXPENSIVE_WORDS
 
@@ -697,6 +698,7 @@ def run_in_parallel(function_to_execute, instance, data, **kwargs):
 
 def batch_modulator(convertor_function):
     def batch_wrapper(*args, **kwargs):
+        convertor_function_wrapper = encryption_modulator(convertor_function)
         instance = args[0] if args else None
         if hasattr(instance, 'encryptor'):
             data = args[1]
@@ -707,19 +709,47 @@ def batch_modulator(convertor_function):
         if isinstance(data, list):
             parallel = kwargs.get("parallel", False)
             if parallel:
-                return run_in_parallel(encryption_modulator(convertor_function), instance, data, **kwargs)
+                return run_in_parallel(convertor_function_wrapper, instance, data, **kwargs)
             else:
                 if instance is not None:
                     return [
-                        encryption_modulator(convertor_function)(instance, datum, **kwargs) for datum in data
+                        convertor_function_wrapper(instance, datum, **kwargs) for datum in data
                     ]
                 else:
                     return [
-                        encryption_modulator(convertor_function)(datum, **kwargs) for datum in data
+                        convertor_function_wrapper(datum, **kwargs) for datum in data
                     ]
         elif isinstance(data, str):
             with open(data, "r") as file:
-                return encryption_modulator(convertor_function)(instance, file.read(), **kwargs)
+                return convertor_function_wrapper(instance, file.read(), **kwargs)
+        else:
+            raise ValueError("Data must be a list or readable buffer")
+
+    return batch_wrapper
+
+def async_batch_modulator(convertor_function):
+    async def batch_wrapper(*args, **kwargs):
+        convertor_function_wrapper = async_encryption_modulator(convertor_function)
+        instance = args[0] if args else None
+        if hasattr(instance, 'encryptor'):
+            data = args[1]
+        else:
+            data = args[0]
+            instance = None
+
+        if isinstance(data, list):
+            if instance is not None:
+                return await asyncio.gather(*[
+                    convertor_function_wrapper(instance, datum, **kwargs) for datum in data
+                ])
+            else:
+                return await asyncio.gather(*[
+                    convertor_function_wrapper(datum, **kwargs) for datum in data
+                ])
+        elif isinstance(data, str):
+            loop = asyncio.get_running_loop()
+            content = await loop.run_in_executor(None, lambda: open(data, "r").read())
+            return await convertor_function_wrapper(instance, content, **kwargs)
         else:
             raise ValueError("Data must be a list or readable buffer")
 
