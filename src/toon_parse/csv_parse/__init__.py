@@ -96,7 +96,8 @@ class CsvConverter:
         return validate_csv_string(csv_string)
 
 from .async_converter import AsyncCsvConverter
+from .batch_converter import BatchCsvConverter
 
 __all__ = [
-    'CsvConverter', 'AsyncCsvConverter',
+    'CsvConverter', 'AsyncCsvConverter', 'BatchCsvConverter',
 ]

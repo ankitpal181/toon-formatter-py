@@ -12,7 +12,9 @@ def validate_yaml_string(yaml_string):
     else:
         try:
             yaml.safe_load(yaml_string)
-        except ValueError as exception:
+        except yaml.YAMLError as exception:
+            validation_status = {'is_valid': False, 'error': str(exception)}
+        except Exception as exception:
             validation_status = {'is_valid': False, 'error': str(exception)}
 
     return validation_status

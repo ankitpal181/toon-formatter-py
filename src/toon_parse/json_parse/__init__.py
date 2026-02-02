@@ -96,9 +96,10 @@ class JsonConverter:
         return validate_json_string(json_string)
 
 from .async_converter import AsyncJsonConverter
+from .batch_converter import BatchJsonConverter
 
 __all__ = [
-    'JsonConverter', 'AsyncJsonConverter',
+    'JsonConverter', 'AsyncJsonConverter', 'BatchJsonConverter',
     'yaml_to_json', 'json_to_yaml',
     'xml_to_json', 'json_to_xml',
     'csv_to_json', 'json_to_csv',

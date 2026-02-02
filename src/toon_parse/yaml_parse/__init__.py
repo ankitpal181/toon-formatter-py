@@ -96,9 +96,10 @@ class YamlConverter:
         return validate_yaml_string(yaml_string)
 
 from .async_converter import AsyncYamlConverter
+from .batch_converter import BatchYamlConverter
 
 __all__ = [
-    'YamlConverter', 'AsyncYamlConverter',
+    'YamlConverter', 'AsyncYamlConverter', 'BatchYamlConverter',
     'xml_to_yaml', 'yaml_to_xml',
     'csv_to_yaml', 'yaml_to_csv',
 ]

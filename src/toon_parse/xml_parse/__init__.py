@@ -96,8 +96,9 @@ class XmlConverter:
         return validate_xml_string(xml_string)
 
 from .async_converter import AsyncXmlConverter
+from .batch_converter import BatchXmlConverter
 
 __all__ = [
-    'XmlConverter', 'AsyncXmlConverter',
+    'XmlConverter', 'AsyncXmlConverter', 'BatchXmlConverter',
     'csv_to_xml', 'xml_to_csv',
 ]
