@@ -97,9 +97,10 @@ class JsonConverter:
 
 from .async_converter import AsyncJsonConverter
 from .batch_converter import BatchJsonConverter
+from .async_batch_converter import AsyncBatchJsonConverter
 
 __all__ = [
-    'JsonConverter', 'AsyncJsonConverter', 'BatchJsonConverter',
+    'JsonConverter', 'AsyncJsonConverter', 'BatchJsonConverter', 'AsyncBatchJsonConverter',
     'yaml_to_json', 'json_to_yaml',
     'xml_to_json', 'json_to_xml',
     'csv_to_json', 'json_to_csv',

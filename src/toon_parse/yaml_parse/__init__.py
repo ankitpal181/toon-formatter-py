@@ -97,9 +97,10 @@ class YamlConverter:
 
 from .async_converter import AsyncYamlConverter
 from .batch_converter import BatchYamlConverter
+from .async_batch_converter import AsyncBatchYamlConverter
 
 __all__ = [
-    'YamlConverter', 'AsyncYamlConverter', 'BatchYamlConverter',
+    'YamlConverter', 'AsyncYamlConverter', 'BatchYamlConverter', 'AsyncBatchYamlConverter',
     'xml_to_yaml', 'yaml_to_xml',
     'csv_to_yaml', 'yaml_to_csv',
 ]

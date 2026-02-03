@@ -97,8 +97,9 @@ class XmlConverter:
 
 from .async_converter import AsyncXmlConverter
 from .batch_converter import BatchXmlConverter
+from .async_batch_converter import AsyncBatchXmlConverter
 
 __all__ = [
-    'XmlConverter', 'AsyncXmlConverter', 'BatchXmlConverter',
+    'XmlConverter', 'AsyncXmlConverter', 'BatchXmlConverter', 'AsyncBatchXmlConverter',
     'csv_to_xml', 'xml_to_csv',
 ]

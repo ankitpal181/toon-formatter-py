@@ -97,7 +97,8 @@ class CsvConverter:
 
 from .async_converter import AsyncCsvConverter
 from .batch_converter import BatchCsvConverter
+from .async_batch_converter import AsyncBatchCsvConverter
 
 __all__ = [
-    'CsvConverter', 'AsyncCsvConverter', 'BatchCsvConverter',
+    'CsvConverter', 'AsyncCsvConverter', 'BatchCsvConverter', 'AsyncBatchCsvConverter'
 ]
