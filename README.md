@@ -252,6 +252,280 @@ async def main():
 asyncio.run(main())
 ```
 
+
+## 📦 Batch Processing
+
+Process multiple data items concurrently using batch converters. Available for all formats: **TOON**, **JSON**, **YAML**, **XML**, and **CSV**.
+
+### Synchronous Batch Converters
+
+```python
+from toon_parse import BatchToonConverter, BatchJsonConverter, BatchYamlConverter
+
+# Process multiple items in parallel
+converter = BatchToonConverter()
+
+json_list = [
+    {"name": "Alice", "age": 30},
+    {"name": "Bob", "age": 25},
+    {"name": "Charlie", "age": 35}
+]
+
+# Convert all items to TOON (runs in parallel)
+toon_results = converter.from_json(json_list, parallel=True)
+print(len(toon_results))  # 3
+
+# Convert back to JSON
+json_results = converter.to_json(toon_results, parallel=True, return_json=False)
+# Returns list of dicts
+```
+
+### Available Batch Converters
+
+All batch converters support the same methods as their non-batch counterparts:
+
+```python
+from toon_parse import (
+    BatchToonConverter,   # TOON ↔ JSON/YAML/XML/CSV
+    BatchJsonConverter,   # JSON ↔ TOON/YAML/XML/CSV
+    BatchYamlConverter,   # YAML ↔ TOON/JSON/XML/CSV
+    BatchXmlConverter,    # XML ↔ TOON/JSON/YAML/CSV
+    BatchCsvConverter     # CSV ↔ TOON/JSON/YAML/XML
+)
+
+# Example: Cross-format batch conversion
+yaml_converter = BatchYamlConverter()
+xml_converter = BatchXmlConverter()
+
+yaml_list = ["name: Alice", "name: Bob", "name: Charlie"]
+
+# YAML → XML (batch)
+xml_results = yaml_converter.to_xml(yaml_list, parallel=True)
+
+# XML → JSON (batch)
+json_results = xml_converter.to_json(xml_results, parallel=True)
+```
+
+### Batch Validation
+
+```python
+from toon_parse import BatchToonConverter
+
+# Validate multiple TOON strings
+toon_list = [
+    "name: Alice\nage: 30",
+    "invalid toon",
+    "name: Bob\nage: 25"
+]
+
+results = BatchToonConverter.validate(toon_list, parallel=True)
+
+for i, result in enumerate(results):
+    print(f"Item {i}: {'✅ Valid' if result['is_valid'] else '❌ Invalid'}")
+```
+
+### Batch with Encryption
+
+```python
+from toon_parse import BatchJsonConverter, Encryptor
+from cryptography.fernet import Fernet
+
+key = Fernet.generate_key()
+enc = Encryptor(key=key, algorithm='fernet')
+converter = BatchJsonConverter(encryptor=enc)
+
+# Encrypt multiple JSON strings
+json_list = ['{"id": 1}', '{"id": 2}', '{"id": 3}']
+encrypted_inputs = [enc.encrypt(j) for j in json_list]
+
+# Batch convert with middleware mode (decrypt → convert → encrypt)
+encrypted_toon = converter.to_toon(
+    encrypted_inputs,
+    conversion_mode="middleware",
+    parallel=True
+)
+```
+
+## ⚡ Async Batch Processing
+
+For high-performance non-blocking batch operations, use async batch converters. These use `asyncio.gather` for implicit parallelism.
+
+### Key Features
+- **Implicit Parallelism**: No `parallel` flag needed - concurrency is automatic via `asyncio.gather`
+- **Non-blocking I/O**: All file operations use thread pool executors
+- **Event Loop Friendly**: Doesn't block the event loop during batch processing
+
+### Basic Usage
+
+```python
+import asyncio
+from toon_parse import AsyncBatchToonConverter, AsyncBatchJsonConverter
+
+async def main():
+    converter = AsyncBatchToonConverter()
+    
+    # Process 100 items concurrently
+    json_list = [{"id": i, "name": f"User{i}"} for i in range(100)]
+    
+    # Automatically runs all conversions concurrently
+    toon_results = await converter.from_json(json_list)
+    
+    print(f"Converted {len(toon_results)} items")
+
+asyncio.run(main())
+```
+
+### Available Async Batch Converters
+
+```python
+from toon_parse import (
+    AsyncBatchToonConverter,   # TOON ↔ JSON/YAML/XML/CSV
+    AsyncBatchJsonConverter,   # JSON ↔ TOON/YAML/XML/CSV
+    AsyncBatchYamlConverter,   # YAML ↔ TOON/JSON/XML/CSV
+    AsyncBatchXmlConverter,    # XML ↔ TOON/JSON/YAML/CSV
+    AsyncBatchCsvConverter     # CSV ↔ TOON/JSON/YAML/XML
+)
+```
+
+### Cross-Format Async Batch Pipeline
+
+```python
+import asyncio
+from toon_parse import AsyncBatchJsonConverter, AsyncBatchYamlConverter
+
+async def convert_pipeline():
+    json_conv = AsyncBatchJsonConverter()
+    yaml_conv = AsyncBatchYamlConverter()
+    
+    # Start with 50 JSON objects
+    json_data = [{"user": f"user{i}", "active": True} for i in range(50)]
+    
+    # JSON → YAML (concurrent)
+    yaml_results = await json_conv.to_yaml(json_data)
+    
+    # YAML → TOON (concurrent)
+    toon_results = await yaml_conv.to_toon(yaml_results)
+    
+    return toon_results
+
+results = asyncio.run(convert_pipeline())
+```
+
+### Concurrent Multi-Format Processing
+
+```python
+import asyncio
+from toon_parse import (
+    AsyncBatchJsonConverter,
+    AsyncBatchYamlConverter,
+    AsyncBatchXmlConverter
+)
+
+async def process_all_formats():
+    # Initialize converters
+    json_conv = AsyncBatchJsonConverter()
+    yaml_conv = AsyncBatchYamlConverter()
+    xml_conv = AsyncBatchXmlConverter()
+    
+    # Different format data
+    json_data = [{"id": 1}, {"id": 2}]
+    yaml_data = ["name: Alice", "name: Bob"]
+    xml_data = ["<user>Alice</user>", "<user>Bob</user>"]
+    
+    # Process all formats concurrently
+    results = await asyncio.gather(
+        json_conv.to_toon(json_data),
+        yaml_conv.to_toon(yaml_data),
+        xml_conv.to_toon(xml_data)
+    )
+    
+    json_toon, yaml_toon, xml_toon = results
+    return json_toon, yaml_toon, xml_toon
+
+asyncio.run(process_all_formats())
+```
+
+### Async Batch Validation
+
+```python
+import asyncio
+from toon_parse import AsyncBatchToonConverter
+
+async def validate_batch():
+    toon_list = [
+        "name: Alice\nage: 30",
+        "invalid toon data",
+        "name: Bob\nage: 25"
+    ]
+    
+    # Concurrent validation
+    results = await AsyncBatchToonConverter.validate(toon_list)
+    
+    for i, result in enumerate(results):
+        status = "✅ Valid" if result['is_valid'] else "❌ Invalid"
+        print(f"Item {i}: {status}")
+
+asyncio.run(validate_batch())
+```
+
+### Async Batch with Encryption
+
+```python
+import asyncio
+from toon_parse import AsyncBatchJsonConverter, Encryptor
+from cryptography.fernet import Fernet
+
+async def secure_batch_processing():
+    key = Fernet.generate_key()
+    enc = Encryptor(key=key, algorithm='fernet')
+    converter = AsyncBatchJsonConverter(encryptor=enc)
+    
+    # Prepare encrypted inputs
+    json_list = ['{"user": "Alice"}', '{"user": "Bob"}', '{"user": "Charlie"}']
+    encrypted_inputs = [enc.encrypt(j) for j in json_list]
+    
+    # Batch convert with middleware (decrypt → convert → encrypt)
+    # All items processed concurrently
+    encrypted_yaml = await converter.to_yaml(
+        encrypted_inputs,
+        conversion_mode="middleware"
+    )
+    
+    return encrypted_yaml
+
+asyncio.run(secure_batch_processing())
+```
+
+### Performance Comparison
+
+```python
+import asyncio
+import time
+from toon_parse import BatchToonConverter, AsyncBatchToonConverter
+
+# Generate test data
+data = [{"id": i, "value": f"test{i}"} for i in range(200)]
+
+# Synchronous batch (with parallel=True)
+start = time.perf_counter()
+sync_converter = BatchToonConverter()
+sync_results = sync_converter.from_json(data, parallel=True)
+sync_time = time.perf_counter() - start
+
+# Async batch (implicit parallelism)
+async def async_convert():
+    converter = AsyncBatchToonConverter()
+    return await converter.from_json(data)
+
+start = time.perf_counter()
+async_results = asyncio.run(async_convert())
+async_time = time.perf_counter() - start
+
+print(f"Sync batch: {sync_time:.2f}s")
+print(f"Async batch: {async_time:.2f}s")
+# Async is typically 20-30% faster and doesn't block the event loop
+```
+
 ## 📚 Features & Support
 
 | Feature | JSON | XML | CSV | YAML | TOON |
