@@ -78,8 +78,9 @@ async def test_async_batch_csv_to_yaml():
         "name,age\nBob,25"
     ]
     
-    # Skip - CSV to YAML has missing yaml import
-    pytest.skip("CSV to YAML conversion has missing yaml import in csv_converter")
+    results = await converter.to_yaml(csv_list)
+    
+    assert len(results) == 2
 
 
 @pytest.mark.asyncio
@@ -91,8 +92,9 @@ async def test_async_batch_csv_from_yaml():
         "- name: Bob\n  age: 25"
     ]
     
-    # Skip - YAML to CSV has missing yaml import
-    pytest.skip("YAML to CSV conversion has missing yaml import in csv_converter")
+    results = await converter.from_yaml(yaml_list)
+    
+    assert len(results) == 2
 
 
 @pytest.mark.asyncio
